@@ -1,0 +1,834 @@
+name: $(Rev:r)
+trigger:
+- none
+variables:
+  - group: EmailRecipients
+  - group: P12Password_Lowersandprod
+
+pool:
+  name: Azure Pipelines
+  vmImage: macOS-15
+  demands:
+  - xcode
+
+stages:
+  - stage: 'TUKI_WireMock'
+    displayName: 'TUKI_WireMock'
+    jobs:
+    - job: TUKI_WireMock
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-WIREMOCK-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_WireMock
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_WireMock.result, 'succeeded'), eq(dependencies.TUKI_WireMock.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_WireMock.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_WireMock.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_WireMock.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_WireMock.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_WireMock.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+      
+  - stage: 'TUKI_DEV'
+    displayName: 'TUKI_DEV'
+    jobs:
+    - job: TUKI_DEV
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-DEV-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_DEV
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_DEV.result, 'succeeded'), eq(dependencies.TUKI_DEV.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_DEV.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_DEV.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_DEV.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_DEV.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_DEV.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_DEV1'
+    displayName: 'TUKI_DEV1'
+    jobs:
+    - job: TUKI_DEV1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-DEV1-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_DEV1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_DEV1.result, 'succeeded'), eq(dependencies.TUKI_DEV1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_DEV1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_DEV1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_DEV1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_DEV1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_DEV1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_DEV2'
+    displayName: 'TUKI_DEV2'
+    jobs:
+    - job: TUKI_DEV2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-DEV2-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_DEV2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_DEV2.result, 'succeeded'), eq(dependencies.TUKI_DEV2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_DEV2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_DEV2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_DEV2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_DEV2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_DEV2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_awsQE'
+    displayName: 'TUKI_awsQE'
+    jobs:
+    - job: TUKI_awsQE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-AWSQE-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_awsQE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_awsQE.result, 'succeeded'), eq(dependencies.TUKI_awsQE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_awsQE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_awsQE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_awsQE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_awsQE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_awsQE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_QE'
+    displayName: 'TUKI_QE'
+    jobs:
+    - job: TUKI_QE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-QE-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_QE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_QE.result, 'succeeded'), eq(dependencies.TUKI_QE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_QE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_QE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_QE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_QE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_QE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_QE1'
+    displayName: 'TUKI_QE1'
+    jobs:
+    - job: TUKI_QE1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-QE1-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_QE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_QE1.result, 'succeeded'), eq(dependencies.TUKI_QE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_QE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_QE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_QE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_QE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_QE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_QE2'
+    displayName: 'TUKI_QE2'
+    jobs:
+    - job: TUKI_QE2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-QE2-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_QE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_QE2.result, 'succeeded'), eq(dependencies.TUKI_QE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_QE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_QE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_QE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_QE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_QE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+        
+  - stage: 'TUKI_CFAQE'
+    displayName: 'TUKI_CFAQE'
+    jobs:
+    - job: TUKI_CFAQE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAQE-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAQE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAQE.result, 'succeeded'), eq(dependencies.TUKI_CFAQE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAQE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAQE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAQE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAQE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAQE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_CFAQE1'
+    displayName: 'TUKI_CFAQE1'
+    jobs:
+    - job: TUKI_CFAQE1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAQE1-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAQE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAQE1.result, 'succeeded'), eq(dependencies.TUKI_CFAQE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAQE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAQE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAQE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAQE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_CFAQE2'
+    displayName: 'TUKI_CFAQE2'
+    jobs:
+    - job: TUKI_CFAQE2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAQE2-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAQE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAQE2.result, 'succeeded'), eq(dependencies.TUKI_CFAQE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAQE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAQE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAQE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAQE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAQE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_awsPE'
+    displayName: 'TUKI_awsPE'
+    jobs:
+    - job: TUKI_awsPE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-AWSPE-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_awsPE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_awsPE.result, 'succeeded'), eq(dependencies.TUKI_awsPE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_awsPE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_awsPE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_awsPE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_awsPE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_awsPE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_CFAPE'
+    displayName: 'TUKI_CFAPE'
+    jobs:
+    - job: TUKI_CFAPE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAPE-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAPE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAPE.result, 'succeeded'), eq(dependencies.TUKI_CFAPE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAPE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAPE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAPE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAPE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAPE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_CFAPE1'
+    displayName: 'TUKI_CFAPE1'
+    jobs:
+    - job: TUKI_CFAPE1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAPE1-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAPE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAPE1.result, 'succeeded'), eq(dependencies.TUKI_CFAPE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAPE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAPE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAPE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAPE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAPE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_CFAPE2'
+    displayName: 'TUKI_CFAPE2'
+    jobs:
+    - job: TUKI_CFAPE2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAPE2-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAPE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAPE2.result, 'succeeded'), eq(dependencies.TUKI_CFAPE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAPE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAPE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAPE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAPE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAPE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_CFAUAT'
+    displayName: 'TUKI_CFAUAT'
+    jobs:
+    - job: TUKI_CFAUAT
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAUAT-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAUAT
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAUAT.result, 'succeeded'), eq(dependencies.TUKI_CFAUAT.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAUAT.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAUAT.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAUAT.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAUAT.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_CFAUAT1'
+    displayName: 'TUKI_CFAUAT1'
+    jobs:
+    - job: TUKI_CFAUAT1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAUAT1-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAUAT1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAUAT1.result, 'succeeded'), eq(dependencies.TUKI_CFAUAT1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAUAT1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAUAT1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'TUKI_CFAUAT2'
+    displayName: 'TUKI_CFAUAT2'
+    jobs:
+    - job: TUKI_CFAUAT2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-CFAUAT2-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-non_prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: TUKI_CFAUAT2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.TUKI_CFAUAT2.result, 'succeeded'), eq(dependencies.TUKI_CFAUAT2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.TUKI_CFAUAT2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_CFAUAT2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS EMEA TUKI SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+ 
+
+  - stage: 'TUKI_PROD'
+    displayName: 'TUKI_PROD'
+    jobs:
+    - job: TUKI_PROD
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-production-TUKI-flavor.yml
+      steps:
+        - template: TUKI/template/TUKI-ios-azure-prod-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+          
+    - job: TUKI_Sonarqube
+      pool:
+        name: Azure Pipelines
+        vmImage: macOS-15
+        demands:
+          - xcode 
+      displayName: 'Production_Sonarqube'
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+          - template: TUKI/variables/var-sonarqube-flavor.yml
+      steps:
+          - template: TUKI/SonarQube/ios-sonarqube-template.yml
+          - powershell: |
+             echo "SonarQube URL from template: $(SonarQubeBranchURL)"
+             echo "##vso[task.setvariable variable=SonarQubeBranchURL;isOutput=true]$(SonarQubeBranchURL)"
+            name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: 
+        - TUKI_PROD
+        - TUKI_Sonarqube
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+      condition: |
+        and(
+          in(dependencies.TUKI_PROD.result, 'Succeeded', 'SucceededWithIssues'),
+          in(dependencies.TUKI_Sonarqube.result, 'Succeeded', 'SucceededWithIssues', 'Failed')
+        )
+      variables:
+        AppVersion: $[ dependencies.TUKI_PROD.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.TUKI_PROD.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.TUKI_PROD.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.TUKI_PROD.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.TUKI_PROD.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'SUBWAY iOS TUKI Production'
+        SonarQubeBranchURL: $[ dependencies.TUKI_Sonarqube.outputs['DisplayReleaseDetails.SonarQubeBranchURL'] ]
+      steps:
+      - checkout: none
+      - template: TUKI/template/TUKI_PROD_send_email_template.yml
+      
+  - stage: 'TUKI_Sonarqube'
+    displayName: 'TUKI_Sonarqube'
+    jobs:
+    - job: Sonarqube_Result
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: TUKI/variables/var-sonarqube-flavor.yml
+      steps:
+        - template: TUKI/SonarQube/ios-sonarqube-template.yml
+        - powershell: |
+             echo "SonarQube URL from template: $(SonarQubeBranchURL)"
+             echo "##vso[task.setvariable variable=SonarQubeBranchURL;isOutput=true]$(SonarQubeBranchURL)"
+          name: DisplayReleaseDetails
