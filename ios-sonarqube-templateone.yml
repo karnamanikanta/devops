@@ -1,0 +1,167 @@
+steps:
+
+    - task: PowerShell@2
+      displayName: 'Check for Hardcoded Sensitive Data'
+      inputs:
+        targetType: 'filePath'
+        filePath: '$(Build.SourcesDirectory)/Subway/cicd/NA/SonarQube/scripts/hardcoded-check.ps1'
+        pwsh: true
+
+    - task: SonarQubePrepare@7
+      displayName: 'SonarQube Prepare Task'
+      inputs:
+        SonarQube: 'sonarqube-subway-mob-ios'
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: 'Guest-MobileApps_subway-mob-ios'
+        cliSources: '.'
+        extraProperties: |
+          sonar.language=swift
+          sonar.c.file.suffixes=-
+          sonar.cpp.file.suffixes=-
+          sonar.objc.file.suffixes=-
+          sonar.verbose=true
+          sonar.cfamily.build-wrapper-output.bypass=true
+          sonar.coverageReportPaths=$(system.defaultworkingdirectory)/sonarqube-generic-coverage.xml
+          sonar.exclusions=**/*.rb,**/*.js,**/*.storyboard,**/*.xib,**/*.xml,**/*.json,**/*.h,**/*.m,**/*.entitlements,**/*.txt,**/*.intentdefinition,**/*.der,**/*.cer,**/*.html,**/*Subway/Firebase,**/*Source/Images.xcassets,**/*Pods,**/*Subway/SUBWAY®UITests,**/*Tests.swift,**/*Subway/SubwayTests,**/*Subway/Frameworks,**/*Constants.swift,**/*Constants+Localizations.swift,**/*Constants+LocalizedText.swift,**/*Constants+Analytics.swift,**/*Constants+Errors.swift,**/*Constants+Date.swift,**/*Constants+Images.swift,**/*Constants+API.swift,**/*Constants+Endpoints.swift,**/*Constants+Keys.swift,**/*Constants+FBEvents.swift,**/*Constants+Branch.swift,**/*Constants+Apptentive.swift,**/*Constants+Adobe.swift,**/*Constants+LaunchDarkly.swift,**/*Constants+Notifications.swift,**/*Constants+Deeplinks.swift,**/*Constants+Accessibility.swift,**/*DealHandler.swift,**/*LaunchDarklyOverrideStringController.swift ,**/*LaunchDarklyOverrideController.swift,**/*LaunchDarklyOverrideUtils.swift
+          #sonar.exclusions=*.rb,**/*.js,**/*.storyboard,**/*.xib,**/*.xml,**/*.json,**/*.h,**/*.m,**/*.entitlements,**/*.txt,**/*.intentdefinition,**/*.der,**/*.cer,**/*.html,Subway/Firebase/**,Source/Images.xcassets/**,Pods/**,Subway/SUBWAY®UITests/**/*,**/*Tests.swift,Subway/SubwayTests/**/*,Subway/Frameworks/**/*
+          sonar.coverage.exclusions=**/*ViewController.swift,**/*NavController.swift,**/*FlowController.swift,**/*OrderController.swift,**/*View.swift,**/*Cell.swift,**/*Header.swift,**/*Footer.swift,**/*Label.swift,**/*TextField.swift,**/*StepperControl.swift,**/*Button.swift,Subway/SubwayTests/**/*,Subway/SUBWAY®UITests/**/*,Subway/CICD/**/*,**/*AppDelegate.swift,**/*Tests.swift,**/*Analytics.swift,**/*MapsHelper.swift,**/*CarouselCollectionViewLayout.swift,**/*IncrementalTableViewBindingHelper.swift,**/*Constants.swift,**/*AdobeJSONExtractor.swift,**/*SubwayAdapter.swift,**/*PaymentDetailsAnimator.swift,**/*CrossFadeAnimator.swift,ActionSheetAnimator.swift,**/*DeepLinker.swift,**/*ExpireDateFormatter.swift,**/*BKMoneyUtils.swift,**/*JVFloatLabeledTextField.m,**/*NSString+TextDirectionality.m,**/*BranchDeepLinker.swift,**/*ZipCodeReverseGeocoder.swift,**/*CartModifiable.swift,**/*NetworkAdobeTestingService.swift,**/*DisplayType.swift,**/*SwinjectStoryboard+Extensions.swift,**/*LocalisationHelper.swift,**/*UIViewController+Extensions.swift,**/*SwinjectStoryboard+Extensions.swift,**/*SignInViewController+Azure.swift,**/*NetworkAzureService.swift,**/*InAppNotificationViewcontroller.swift,**/*ObjectiveCBridging.swift,**/*TierStatusSlider.swift,**/*NetworkMenuService.swift,**/*RewardListItem.swift,**/*StoreCloseAlertDisplayer.swift,**/*ObjectiveCBridging.swift,**/*xccov-json-to-cobertura-xml.swift,**/*RewardsSlider.swift,**/*ReOrderData.swift,**/*CartPageConfigurations.swift,**/*RedeemPointsSlider.swift,**/*StoreCloseAlertDisplayer.swift,**/*RedeemPointsSlider.swift,**/*NotificationDisplayer.swift,**/*NotificationService.swift,**/*CartPageConfigurations.swift,**/*NavigationBar+Extensions.swift,**/*UIView+Extensions.swift,**/*UIView+Extensions.swift,**/*NSAttributedString+Extensions.swift,**/*NotificationService.swift,**/*UITapGestureRecognizer+Extension.swift,**/*ACPCampaignClassicHelper.swift,**/*NetworkApptentiveService.swift,**/*AuthenticationService.swift,**/*GuestTabBarViewModel.swift,**/*UINavigationController+Extensions.swift,**/*JSONDownloader.swift,/Subway/Regex/MatchSequence.swift,**/*OrderSummary.swift,**/*CartComboItem.swift,**/AddPaymentNavController+EMEA.swift,**/*AddPaymentNavController+NA.swift,**/*SlideDownAnimator.swift,**/*CartCombo.swift,**/*BenefitsChart+NA.swift,**/*CartComboOption.swift,**/*DeliveryChargesFee.swift,**/*BenefitsChart+EMEA.swift,**/*AppliedOffer.swift,**/*PageLoadingMetric.swift,**/*Tax.swift,**/*UIViewController+Scrollview.swift,**/*OrderHistoryItem.swift,**/*GuestSignUpPopOver.swift,**/*ProductDetailsTipOverlay.swift,**/*URL+Extensions.swift,**/*UserLocation.swift,**/*OrderHistoryItem.swift,**/*Match.swift,**/*NetworkFBAnalyticsService.swift,**/*SignInViewController+AppUpdate.swift,**/*OfferMetadata.swift,**/*OrderCertificate.swift,**/*StoreUpdater.swift,**/*UIViewController+Fields.swift,**/*NetworkHelper.swift,**/*InitializePayment.swift,**/*UIScrollView+Position.swift,**/*UIImage+Extensions.swift,**/*UIViewController+Keyboard.swift,**/*UIFont+Extensions.swift,**/*SignalProducer+Extensions.swift,**/*UIColor+SIHAdditions.swift,**/*BreadModifierOption.swift,**/*CombosPopupViewModal.swift,**/*BannerDisplayer.swift,**/*DBStorage.swift,**/*NavigationBar.swift,**/*NotificationScheduler.swift,**/*UIKit+Extensions.swift,**/*NotificationScheduler.swift,**/*UITextField+Extensions.swift,**/*UpsellViewModel.swift,**/*MakeMealCarouselViewModel+UpdateComboBundle.swift,**/*SupportCrossCountryListModel.swift,**/*BundlesCartRequest.swift,**/*PartnerToken.swift,**/*BranchManagerImpl.swift,**/*AdobeAnalyticsManagerImpl.swift, **/*LaunchDarklyOverrideController.swift, **/*LaunchDarklyOverrideStringController.swift, **/*LaunchDarklyOverrideUtils.swift, **/*NetworkPromotionService.swift, **/*MboxTargetRequest.swift, **/*NetworkGeoCodingService.swift,**/*Analytic.swift,**/*LaunchDarklyOverrideViewModel.swift,**/*ActionSheetHelper.swift,**/*UITabBarController+Extensions.swift,**/*GooglePlacesManagerImpl.swift,**/*UITableViewController+Extensions.swift,**/*StoreUpdateDisplayer.swift,**/*DismissActionSheetAnimator.swift,**/*LaunchDarklyOverrideFlag.swift,**/*SlideDownProvider.swift,**/*UIButton+Extensions+Animation.swift,**/*RightToLeftAnimator.swift,**/*ApplicationError.swift,**/*DealHandler.swift,**/*DealHandler.swift,**/*LaunchDarklyOverrideStringController.swift ,**/*LaunchDarklyOverrideController.swift,**/*LaunchDarklyOverrideUtils.swift
+ 
+    - task: Bash@3
+      name: SetPodHash
+      displayName: 'Generate Podfile.lock hash'
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "Calculating Podfile.lock hash..."
+          PODFILE_LOCK_PATH="$(Build.SourcesDirectory)/Subway/Podfile.lock"
+          if [ -f "$PODFILE_LOCK_PATH" ]; then
+            PODFILE_LOCK_HASH=$(shasum -a 256 "$PODFILE_LOCK_PATH" | awk '{print $1}')
+            echo "##vso[task.setvariable variable=PODFILE_LOCK_HASH;isOutput=true]$PODFILE_LOCK_HASH"
+            echo "podfile.lock hash: $PODFILE_LOCK_HASH"
+          else
+            echo "ERROR: Podfile.lock not found at $PODFILE_LOCK_PATH"
+            exit 1
+          fi
+            
+    - task: Cache@2
+      displayName: 'Cache CocoaPods dependencies'
+      inputs:
+        key: 'sqpods11 | "$(Agent.OS)" | $(SetPodHash.PODFILE_LOCK_HASH)'
+        restoreKeys: |
+          sqpods11 | "$(Agent.OS)"
+          sqpods11
+        path: '$(Build.SourcesDirectory)/Subway/Pods'
+        cacheHitVar: 'PODS_CACHE_RESTORED'
+
+    - task: Bash@3
+      enabled: true
+      displayName: 'Run Unit Tests & Fail Build on Failed UTC'
+      name: relapp
+      continueOnError: false
+      inputs:
+        targetType: 'inline'
+        script: |
+          #!/bin/bash
+          #!/usr/bin/env bash
+          set -euo pipefail
+          
+          echo "📦 Switching to working directory..."
+          cd "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway" || { echo "❌ Failed to change directory"; exit 1; }
+
+          # ----- CONFIG -----
+          BUNDLER_VERSION="${BUNDLER_VERSION:-2.4.22}"   # Fastlane requires Bundler 2.x
+          echo "Ruby info:"
+          which ruby || true
+          ruby -v || true
+
+          echo "Ensuring Bundler ${BUNDLER_VERSION} is installed (we will NOT use the global shim)..."
+          gem uninstall -aIx bundler || true
+          gem install bundler -v "${BUNDLER_VERSION}"
+
+          # Create a project-local Bundler wrapper
+          mkdir -p ./bin
+          cat > ./bin/bundle <<'RUBY_WRAPPER'
+          #!/usr/bin/env ruby
+          require 'rubygems'
+          FORCED_VERSION = ENV.fetch('FORCED_BUNDLER_VERSION')
+          gem 'bundler', "= #{FORCED_VERSION}"
+          load Gem.bin_path('bundler', 'bundle', FORCED_VERSION)
+          RUBY_WRAPPER
+          export FORCED_BUNDLER_VERSION="${BUNDLER_VERSION}"
+          chmod +x ./bin/bundle
+
+          echo "Wrapper bundle version (should be ${BUNDLER_VERSION}):"
+          ./bin/bundle -v
+
+          echo "Running bundle install (local then remote fallback)..."
+          ./bin/bundle install --local || ./bin/bundle install
+
+          if [ ! -f Gemfile.lock ]; then
+            echo "Gemfile.lock missing—creating with Bundler ${BUNDLER_VERSION}..."
+            ./bin/bundle install
+          fi
+          grep -A2 "BUNDLED WITH" Gemfile.lock || true
+
+
+          export FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=600
+          export FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6
+          export DEFAULTWORKINGDIRECTORY=$SYSTEM_DEFAULTWORKINGDIRECTORY
+
+          echo "🚀 Executing Fastlane NA_SONARQUBE..."
+          bundle exec fastlane NA_SONARQUBE 2>&1 | tee fastlane_output.log
+          FASTLANE_EXIT_CODE=${PIPESTATUS[0]}
+          if [ $FASTLANE_EXIT_CODE -ne 0 ]; then
+            echo "❌ Fastlane failed with exit code: $FASTLANE_EXIT_CODE"
+            exit $FASTLANE_EXIT_CODE
+          fi
+
+          echo "📄 Capturing Fastlane output..."
+          BUILD_OUTPUT=$(cat fastlane_output.log)
+          echo "🪵 Raw Fastlane Output:"
+          echo "$BUILD_OUTPUT"
+
+          echo "🧹 Cleaning terminal escape sequences..."
+          CLEANED_OUTPUT=$(echo "$BUILD_OUTPUT" | sed 's/\x1b\[[0-9;]*m//g')
+
+          echo "🔍 Extracting UTC failure count..."
+          FAILED_UTC_COUNT=$(echo "$CLEANED_OUTPUT" | awk -F'|' '/Number of failures/ { gsub(/ /, "", $3); print $3 }')
+          ALLOWED_FAILED_UTC_COUNT=$(ALLOWED_FAILED_UTC_COUNT)
+
+          echo "❗ Failed UTC Count: $FAILED_UTC_COUNT"
+          echo "✅ Allowed UTC Count: $ALLOWED_FAILED_UTC_COUNT"
+
+          GREEN='\033[0;32m'
+          RED='\033[0;31m'
+
+          if [ "$FAILED_UTC_COUNT" -gt "$ALLOWED_FAILED_UTC_COUNT" ]; then
+            echo -e "${RED}❌ UTC failure count ($FAILED_UTC_COUNT) exceeded allowed limit ($ALLOWED_FAILED_UTC_COUNT). Failing build."
+            exit 1
+          else
+            echo -e "${GREEN}✅ UTC failures ($FAILED_UTC_COUNT) are within acceptable range."
+          fi
+
+    - task: SonarQubeAnalyze@7
+
+    - task: SonarQubePublish@7
+      inputs:
+         pollingTimeoutSec: '600'
+
+    - task: PowerShell@2
+      displayName: 'Display SonarQube URL'
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Define the SonarQube server URL
+          $sonarServer = 'https://sonarqube.subway.com'       
+          # Define project key
+          $projectKey = 'Guest-MobileApps_subway-mob-ios'
+          $fullBranchName = "$(Build.SourceBranch)"
+          # Extract the branch name by removing 'refs/heads/'
+          $branchName = $fullBranchName -replace '^refs/heads/', ''
+          $encodedBranchName = [System.Net.WebUtility]::UrlEncode($branchName)
+          $sonarUrl = "$sonarServer/dashboard?branch=$encodedBranchName&id=$projectKey"
+          # Output the URL to the pipeline logs
+          Write-Host "SonarQube URL for branch '$branchName': $sonarUrl"
+          # Set the URL as a pipeline variable
+          Write-Output "##vso[task.setvariable variable=SonarQubeBranchURL]$sonarUrl"
