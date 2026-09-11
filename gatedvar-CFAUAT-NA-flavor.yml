@@ -1,0 +1,16 @@
+variables:
+  lane: enterprise_build
+  BuildVariant: >
+    region:'NA'
+    scheme:'CFA UAT'
+    configuration:'CFA-UAT'
+    archive_suffix:'CFAUAT'
+    export_options_path:'cicd/NA/devops_files/non_prod/ExportOptions.plist'
+    google_service_plist:'$(System.DefaultWorkingDirectory)/Subway/Subway/Firebase/NA/Stage/GoogleService-Info.plist'
+    info_plist_path:'$(System.DefaultWorkingDirectory)/Subway/Source/NA-Info.plist'
+    firebase_app_id:'1:25655352521:ios:3cf2fe7eafcbadc6f60118'
+    ipa_source_name:'SUBWAY®.ipa'
+    firebase_groups:'Subway-Mobile-Leads-Group,Subway-Mobile-Testing-Group'
+  powershellflag: 'true'
+  set_buildnumberpath: 'Subway/cicd/NA/variables/SetBuildNumber.sh'
+  APPCENTER_API_TOKEN: '$(api_token)'
