@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>method</key>
+        <string>app-store</string>
+        <key>signingCertificate</key>
+        <string>iPhone Distribution</string>
+        <key>teamID</key>
+        <string>ZN6FS758HV</string>
+        <key>compileBitcode</key>
+        <true/>
+        <key>stripSwiftSymbols</key>
+        <true/>
+        <key>thinning</key>
+        <string>&lt;none&gt;</string>
+        <key>signingStyle</key>
+        <string>manual</string>
+        <key>provisioningProfiles</key>
+        <dict>
+            <key>com.subway.mobile.subwayapp03</key>
+            <string>match AppStore com.subway.mobile.subwayapp03</string>
+            <key>com.subway.mobile.subwayapp03.siriintent</key>
+            <string>AppStore Siriintent com.subway.mobile.subwayapp03</string>
+            <key>com.subway.mobile.subwayapp03.siriintentui</key>
+            <string>AppStore Siriintntui com.subway.mobile.subwayapp03</string>
+			<key>com.subway.mobile.subwayapp03.richnotification</key>
+            <string>AppStore Subway RichNotification</string>
+        </dict>
+    </dict>
+</plist>
