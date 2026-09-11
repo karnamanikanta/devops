@@ -1,0 +1,128 @@
+Procedure for Creating a New Schema/Stage with Signing Process
+Subway Mobile App Android - EMEA FN Multistage Pipeline
+Region: FL (Finland)
+Note: This process is demonstrated using the FL region. The same steps should be followed for other regions, adjusting as necessary.
+________________________________________
+Objective:
+This document provides detailed steps for adding a new schema/stage (cfauat1FLRelease) in the Subway Mobile App Android pipeline with the appropriate signing configuration, ensuring the secure build and deployment process.
+________________________________________
+Step-by-Step Process:
+Step 1: Create a New Stage in the Pipeline
+1.	Navigate to the pipeline:
+o	Go to SubwayMobileApp_Android_EMEA-FN_Multistage_Pipeline.
+2.	Define the new stage:
+o	In the pipeline YAML file, create a new stage called cfauat1FLRelease. Add the following configuration:
+yaml
+Copy code
+- stage: 'cfauat1FLRelease'
+  displayName: 'cfauat1FLRelease'
+
+  jobs:
+  - job: cfauat1FLRelease
+    variables:
+      - template: EMEA/FN/variables/var-CFAUAT1EMEARelease-flavor.yml
+      - group: subway-mob-android-EMEA-prod-Fastlane  # This group should be added from the production stage.
+  
+    steps:
+      - template: EMEA/FN/templates/android-fastlane-non_prod-template.yml
+3.	Key Notes:
+o	Ensure the appropriate variable template and variable groups are used.
+o	The Fastlane configuration will be defined in the next steps.
+________________________________________
+Step 2: Modify the android-fastlane-non_prod-template.yml
+1.	Locate the template:
+o	Go to EMEA/FN/templates/android-fastlane-non_prod-template.yml.
+2.	Add the Fastlane lane for FL region:
+o	In the Fastlane template, add a new lane called cfauat1FLRealRelease. This lane will handle the build, signing, and upload of the APK file.
+lane :cfauat1FLRealRelease do
+  gradle(task: "clean")
+  
+  gradle(
+    task: "assemble",
+    build_type: "cfauat1FLRealRelease",
+    print_command: false,  
+    properties: {
+      "android.injected.signing.store.file" => ENV["KEYSTORE_FILE"],
+      "android.injected.signing.store.password" => ENV["KEYSTORE_PASS"],
+      "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+      "android.injected.signing.key.password" => ENV["KEY_PASS"],
+    }
+  )
+
+  appcenter_upload(
+    api_token: ENV["APPCENTER_API_TOKEN"],
+    owner_name: "Subway",
+    app_name: "Subway-Android-Finland-UAT",
+    file: "./app/build/outputs/apk/cfauat1FLReal/release/app-cfauat1-FL-real-release.apk", 
+    destinations: "*",
+  )
+end
+3.	Key Notes:
+o	Ensure the appropriate signing keys (e.g., KEYSTORE_FILE, KEYSTORE_PASS, KEY_ALIAS, KEY_PASS) are provided in the environment variables.
+o	Rename the APK file if necessary (for example, if the build fails).
+________________________________________
+Step 3: Modify the Germany-android-fastlane-non_prod-template.yml
+1.	Locate the template:
+o	Go to Germany-android-fastlane-non_prod-template.yml.
+2.	Add tasks for downloading the JKS Connect API Key and configuring the signing process:
+o	Download Secure File Task:
+yaml
+Copy code
+- task: DownloadSecureFile@1
+  name: fntestconnectkey
+  displayName: 'Download jks Connect API Key'
+  inputs:
+    secureFile: 'f4af0e2e-d2e8-4aba-a8ea-db3217ac2346'
+o	PowerShell Task to Copy File:
+yaml
+Copy code
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      $GetFileNamePath = "$(fntestconnectkey.secureFilePath)"
+      $GetFileDirectory = (Get-Item -Path $GetFileNamePath).DirectoryName
+      $GetFileName = (Get-Item -Path $GetFileNamePath).Name
+      robocopy "$GetFileDirectory" "cicd\devops_files\prod" "$GetFileName" /MT:128
+    ignoreLASTEXITCODE: true
+3.	Add the Bash Task to Build the APK:
+o	Include a Bash script to initialize Fastlane, export signing properties, and run the Fastlane lane created in Step 2:
+yaml
+Copy code
+- task: Bash@3
+  displayName: 'Build android'
+  inputs: 
+    targetType: 'inline'
+    script: |
+      gem install fastlane
+      fastlane init
+      export KEYSTORE_FILE=$(keystore_file)
+      export KEYSTORE_PASS=$(keystore_pass)
+      export KEY_ALIAS=$(key_alias)
+      export KEY_PASS=$(key_pass)
+      export APPCENTER_API_TOKEN=$(api_token)
+      bundle exec fastlane $(lane)
+4.	Key Notes:
+o	Ensure Fastlane is initialized and installed.
+o	Export all necessary environment variables before running Fastlane.
+________________________________________
+Step 4: Add Variables for the New Stage
+1.	Add variables for the new stage (cfauat1FLRelease) in the pipeline:
+yaml
+Copy code
+variables:
+  taskname: 'assembleCfauat1FLRealRelease'
+  lane: cfauat1FLRealRelease
+  APPCENTER_API_TOKEN: '010f40c8cd03249db88d1973bd9055c383de177e'
+2.	Adjust any variables if needed:
+o	If you encounter issues with the assemble task, ensure the taskname and lane variables are correctly updated.
+________________________________________
+Conclusion:
+By following the steps outlined in this document, you can successfully create a new schema/stage for the FL region with proper signing and build configurations in the Subway Mobile App pipeline. These steps ensure that the APK is properly signed, assembled, and uploaded to App Center for deployment.
+Repeat the same process for other regions by adjusting the stage, variable templates, signing keys, and APK destinations accordingly.
+________________________________________
+References:
+•	Pipeline Location: SubwayMobileApp_Android_EMEA-FN_Multistage_Pipeline
+•	Signing Variables: Keystore and signing properties defined in environment variables (e.g., KEYSTORE_FILE, KEY_ALIAS, etc.).
+•	Fastlane: Used for handling Android build tasks.
+
