@@ -1,0 +1,274 @@
+Sonarqube Document:
+Android Sonarqube Project:
+Steps:
+1)We have to make service Connection between Pipeline and Sonarqube dashboard.
+
+2)Get the project name and project key from Devops Team.
+3)Get the Credentials like username and password of the sonarqube dashboard.
+4)Get the required details from Developers.
+• What is the code they are using
+• What are the plugin tools they are using and their version
+• What is the OS machine and Version they are using
+• What is the coverage xmlReportPaths they are using
+• What are the coverage exclusion they are using
+• What are the test results file they are using
+5)In Android project we are using Gradle Tool and Jacoco coverage Tool for Sonarqube.
+6)Start building the soanrqube .yml pipeline with all the required details.
+7)We have to use Prepare Analysis Task in Pipeline.
+
+task: SonarQubePrepare@4
+inputs:
+SonarQube: 'sonarqube-subway-mob-android'
+scannerMode: 'Other'
+projectKey: 'Guest-MobileApps_subway-mob-android'
+extraProperties: |
+sonar.projectName=subway-mob-android
+sonar.projectKey=Guest-MobileApps_subway-mob-android
+sonar.java.coveragePlugin=jacoco
+sonar.coverage.jacoco.xmlReportPaths=testUatRealDebugUnitTestCoverage.xml
+sonar.exclusions=
+sonar.coverage.exclusions=
+8)Run the gradle task for sonarqube and publish the junit results.
+
+task: Gradle@2
+displayName: 'gradlew assembleuatRealRelease'
+inputs:
+gradleWrapperFile: 'gradlew'
+gradleOptions: '-Xmx3072m'
+tasks: 'testUatRealDebugUnitTestCoverage'
+publishJUnitResults: true
+testResultsFiles: '$(System.DefaultWorkingDirectory)//test-results//*.xml'
+javaHomeOption: 'JDKVersion'
+jdkVersionOption: '1.11'
+jdkArchitectureOption: 'x64'
+sonarQubeRunAnalysis: true
+sqGradlePluginVersionChoice: 'build'
+spotBugsAnalysis: false
+9)Run the Publish Code Coverage Task to check the results.
+
+task: PublishCodeCoverageResults@1
+inputs:
+codeCoverageTool: 'JaCoCo'
+summaryFileLocation: '
+(
+S
+y
+s
+t
+e
+m
+.
+D
+e
+f
+a
+u
+l
+t
+W
+o
+r
+k
+i
+n
+g
+D
+i
+r
+e
+c
+t
+o
+r
+y
+)
+/
+t
+e
+s
+t
+U
+a
+t
+R
+e
+a
+l
+D
+e
+b
+u
+g
+U
+n
+i
+t
+T
+e
+s
+t
+C
+o
+v
+e
+r
+a
+g
+e
+.
+x
+m
+l
+′
+r
+e
+p
+o
+r
+t
+D
+i
+r
+e
+c
+t
+o
+r
+y
+:
+′
+(System.DefaultWorkingDirectory)/testUatRealDebugUnitTestCoverage.xml
+​′
+​​ reportDirectory:
+​′
+​​ (System.DefaultWorkingDirectory)/app/build/reports/tests/testUatR ealDebugUnitTest'
+10)add the Publish task to get the results in Sonarqube dashboard.
+
+task: SonarQubePublish@5
+inputs:
+pollingTimeoutSec: '300'
+11)Check the coverage Results in Sonarqube Dashboard using below link.
+https://sonarqube.subway.com/projects 
+SubwayMobileApp_Android_Multistage_Pipeline
+Mulistage Pipeline Setup for Sonarqube:
+
+We can see the Sonarqube code in Repository
+
+How to run sonarqube pipeline with Multistage.
+
+Check the test coverage report.
+
+Check the Code coverage Report on sonarqube dashboard.
+https://sonarqube.subway.com/dashboard?branch=OR_29.20.0_PHASE1_DEV&id=Guest-MobileApps_subway-mob-android 
+
+iOS Sonarqube Project:
+Steps:
+1)We have to make service Connection between Pipeline and Sonarqube dashboard.
+
+2)Get the project name and project key from Devops Team.
+3)Get the Credentials like username and password of the sonarqube dashboard.
+4)Get the required details from Developers.
+• What is the code they are using
+• What are the plugin tools they are using and their version
+• What is the OS machine and Version they are using
+• What is the coverage xmlReportPaths they are using
+• What are the coverage exclusion they are using
+• What are the test results file they are using
+•
+5)In IOS project we are using Xcode Tool and Jacoco coverage Tool for Sonarqube.
+6)Start building the soanrqube .yml pipeline with all the required details.
+7)We have to use Prepare Analysis Task in Pipeline.
+
+task: SonarQubePrepare@4
+displayName: 'SonarQube Prepare Task'
+inputs:
+SonarQube: 'sonarqube-subway-mob-ios'
+scannerMode: 'CLI'
+configMode: 'manual'
+cliProjectKey: 'Guest-MobileApps_subway-mob-ios
+extraProperties: |
+sonar.language=swift
+sonar.c.file.suffixes=-
+sonar.cpp.file.suffixes=-
+sonar.objc.file.suffixes=-
+sonar.verbose=true
+sonar.cfamily.build-wrapper-output.bypass=true
+sonar.coverageReportPaths=/Users/runner/work/1/s/sonarqube-generic-coverage.xml
+sonar.test.inclusions=/Test/
+sonar.test.inclusions=.swift
+sonar.tests=
+#sonar.junit.reportsPath=sonar-report/TEST-report.xml
+sonar.junit.reportsPath=sonarqube-generic-coverage.xml
+sonar.testExecutionReportPaths=./junit.xml
+sonar.swift.coverage.reportPattern=sonar-reports/coverage-swift.xml
+sonar.swift.project=
+sonar.swift.workspace=
+sonar.exclusions
+sonar.coverage.exclusions=
+8)Run the xcode task for sonarqube and publish the junit results.
+
+task: Xcode@5
+displayName: 'clean, build and test project'
+continueOnError: true
+inputs:
+actions: 'clean build test'
+configuration: '
+(
+T
+e
+s
+t
+C
+o
+n
+f
+i
+g
+u
+r
+a
+t
+i
+o
+n
+)
+′
+s
+d
+k
+:
+′
+(TestConfiguration)
+​′
+​​ sdk:
+​′
+​​ (TestSDK)'
+xcWorkspacePath: 'Subway/Subway.xcworkspace'
+scheme: 'UAT'
+xcodeVersion: 'default'
+destinationPlatformOption: 'iOS'
+destinationTypeOption: 'simulators'
+destinationSimulators: 'iPhone 13 Pro Max'
+publishJUnitResults: true
+9)Zip XC results to xml file
+
+write SonarQubeAnalyze task.
+task: SonarQubeAnalyze@4
+write Publish Task
+task: SonarQubePublish@4
+inputs:
+pollingTimeoutSec: '300'
+12)Check the coverage Results in Sonarqube Dashboard using below link.
+https://sonarqube.subway.com/projects 
+
+SubwayMobileApp_iOS_Multistage_Pipeline
+Mulistage Pipeline Setup for Sonarqube:
+
+We can see the Sonarqube code in Repository
+
+How to run sonarqube pipeline with Multistage
+
+Check the test coverage report.
+
+Check the Code coverage Report on sonarqube dashboard.
+https://sonarqube.subway.com/dashboard?branch=OR_29.21.0_PHASE1_DEV&id=Guest-  MobileApps_subway-mob-ios
