@@ -1,0 +1,17 @@
+# This is Subway's repo to maintain a version-controlled copy of the
+# signing assets.  Contact Lalit for the password to decrypt these certs
+#git_url "https://subwaytechnology.visualstudio.com/DefaultCollection/DevOps/_git/SubwayiOS_Fastlane"
+
+username "noreply@subway.com"
+readonly "true"
+
+# The default Developer Portal Team ID is Subway Enterprise (uppercase)
+team_id "69647Q2WA8"
+git_branch "enterprise_adc_account"
+
+for_platform :ios do
+  for_lane :appstore do
+    team_id "ZN6FS758HV"
+    git_branch "consumer_adc_account"
+  end
+end
