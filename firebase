@@ -1,0 +1,95 @@
+Created by :Gana Sai Naga Manikanta                                  
+Fire Base   
+For testers to receive notifications for future releases of an app, they must first accept the initial invite. If 
+the tester does not accept the first invite, they will not receive notifications for subsequent releases. 
+Specifically, for iOS users, they must accept the invite through the App Distribution app. For Android users, 
+the invite must be accepted through the Test App. Once the tester has accepted the invite for the respective 
+platform, they will start receiving notifications for future app releases. However, if the tester does not accept 
+the initial invite, they will not receive notifications for any future releases of the app. 
+The fastlane plugin outputs the following links after the release upload. These links help you manage 
+binaries and ensure that testers and other developers have the right release:  
+• A link to the Firebase console displaying a single release. You can share this link with other 
+developers in your org.  
+• A link to the release in the tester experience (iOS web clip) that lets testers view release notes and 
+install the app onto their device. The tester needs access to the release in order to use the link.  
+• A signed link that directly downloads and installs the app binary (IPA file). The link expires after one 
+hour.  
+After you distribute your build, it is available in the App Distribution dashboard of the Firebase console 
+for 150 days. When the build is 30 days from expiring, an expiration notice appears in the console and 
+in the tester's list of builds on their test device.  
+Link to connect with firebase  
+Step1: https://console.firebase.google.com/   
+Test Group creation to release the version  
+Step 1:Select the package which we need to create the groups ex: iOS 
+NA Sandbox  
+step 2: click on Testers & Groups and click on add group option, enter the group name then 
+save.   
+Step 3: Add the tester ids to that group  
+   
+Step 4: add the multiple tester ids, as required.  
+  
+  
+  
+  
+  
+  
+  
+                                          Fastfile creation for CI/CD Process  
+  
+Step 1: create the json file for firebase, keep it in secure file  
+Step 2: Create a folder under cicd and create a newfile and name it as subwaymobile-app
+firebase.json(file name created in secure file) and enter the authentication details in that 
+file  
+Step 3: Add a gem file as gem "fastlane-plugin-firebase_app_distribution"  
+Step 4: Add code to fastfile to upload ipa file to firebase.  
+Code explanation:  
+1. service_credentials_file: "cicd/devops_files/non-prod/subway-mobile
+appfirebase.json",  
+• Above file is Json file where we store the authentication details to connect 
+with firebase  
+2. app: "1:25655352521:ios:fdead49bb5a58f2ef60118",  
+• After adding the App in firebase we will get a app id for that app,  copy the id 
+based on app where the ipa file should store.  
+3. ipa_path: "/Users/runner/work/1/s/Subway/build/EMEA CFAUAT1/SUBWAY®  
+EMEA.ipa"  
+• ipa path where the ipa file is stored, we may get path issues need to give the 
+correct path based on the pipeline error.  
+Step 5: RUN the pipeline with usual steps  
+Step 6: Once pipeline run successfully the ipa file will get uploaded in the firebase based on 
+app id we provided.  
+Step 7: check the releases uploading here 
+iOS_Firebase App installation Process in iphone Device step 1: get 
+the firebase invite from Devops Team  
+Step 2: First try to login with Subway account is prefered, if not option is with personal 
+gmail account.  
+Step 3: Install firebase app distribution  
+
+Step 4: it shows untrusted Enterprise developer.  
+Step 5: click on trust  
+1.Trust the Developer:  
+Go to Settings on your iPhone.  
+Navigate to General > Device Management or Profiles & Device Management.  
+Find the developer's certificate under the Enterprise App section.  
+Tap on the developer's name.  
+Tap Trust [Developer Name] and confirm.  
+2. If trusting the developer doesn't solve the issue, try reinstalling the app. Delete 
+the app from your device.  
+Re-download and install the app from its source.    
+Step 6: Installing app  
+Step 7: app is installed   
+Android_Firebase App installation Process in Android Device.  
+Step1:  
+In the Android operating system, you will receive a link from Firebase to your Subway mail ID. 
+To proceed, click on the "Get started" option. This action will direct you to a page where you 
+are required to provide your Subway mail ID and then press enter. Following this, the 
+Releases will be displayed, enabling you to download the release APK file, as depicted in the 
+second image.  
+Step2: we can see the apk files.  
+Step 3:  
+After downloading the APK file, you need to enable the "Allow third-party apps" option on 
+your Android phone. Then, attempt to install the Subway APK on your device. If you 
+encounter any scan errors, as indicated in the third image, cancel the installation and try 
+again to install the APK from your download location.  
+Step 4:  
+After installing the APK file, the interface will resemble the image shown below. Click on the 
+image to proceed to the following image.  
