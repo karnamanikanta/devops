@@ -1,0 +1,1152 @@
+name: $(Rev:r)
+trigger:
+- noneCFA
+variables:
+  - group: EmailRecipients
+  - group: P12Password_Lowersandprod
+
+pool:
+  name: Azure Pipelines
+  vmImage: macOS-15
+  demands:
+  - xcode
+       
+resources:
+  repositories: 
+    - repository: goldsuite
+      type: git
+      name: QE.UI.Automation.Digital.CICD
+      ref: refs/heads/main
+
+stages:
+  - stage: 'NA_WireMock'
+    displayName: 'NA_WireMock'
+    jobs:
+    - job: NA_WireMock
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-WireMock-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_WireMock
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_WireMock.result, 'succeeded'), eq(dependencies.NA_WireMock.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_WireMock.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_WireMock.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_WireMock.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_WireMock.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_WireMock.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_DEV'
+    displayName: 'NA_DEV'
+    jobs:
+    - job: NA_DEV
+      workspace:
+        clean: all      
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-DEV-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_DEV
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_DEV.result, 'succeeded'), eq(dependencies.NA_DEV.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_DEV.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_DEV.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_DEV.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_DEV.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_DEV.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+
+  - stage: 'NA_DEV1'
+    displayName: 'NA_DEV1'
+    jobs:
+    - job: NA_DEV1
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-DEV1-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_DEV1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_DEV1.result, 'succeeded'), eq(dependencies.NA_DEV1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_DEV1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_DEV1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_DEV1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_DEV1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_DEV1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_DEV2'
+    displayName: 'NA_DEV2'
+    jobs:
+    - job: NA_DEV2
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-DEV2-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_DEV2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_DEV2.result, 'succeeded'), eq(dependencies.NA_DEV2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_DEV2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_DEV2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_DEV2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_DEV2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_DEV2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_CFAQE'
+    displayName: 'NA_CFAQE'
+    jobs:
+    - job: NA_CFAQE
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAQE-NA-flavor.yml  
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAQE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAQE.result, 'succeeded'), eq(dependencies.NA_CFAQE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAQE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAQE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAQE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAQE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAQE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_CFAQE1'
+    displayName: 'NA_CFAQE1'
+    jobs:
+    - job: NA_CFAQE1
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAQE1-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAQE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAQE1.result, 'succeeded'), eq(dependencies.NA_CFAQE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: SMOKE_SUITE_CFAQE1
+    dependsOn: NA_CFAQE1
+    condition: and(succeeded(), eq(variables['SMOKE_SUITE_CFAQE1'], 'true'))
+    variables: 
+      appvar: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: azure-pipelines-CD.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-qe1
+        Environment: swqe2
+        Scope: Smoke
+        Area: DigitalApp
+        Culture: en-US
+        Store: "$(storeidcfaqe1)"
+        GroupBased: All
+
+  - stage: ADA_SUITE_CFAQE1
+    dependsOn: NA_CFAQE1
+    condition: and(succeeded(), eq(variables['ADA_SUITE_CFAQE1'], 'true'))
+    variables: 
+      appvar: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.CurrentBuildNumber']]      
+    jobs:
+    - template: iOSazure-pipelines-ADA-Integration.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-qe1
+        Environment: swuat
+        Scope: Smoke
+        Area: ADAApp
+        Culture: en-US
+        Store: 25904
+        GroupBased: All 
+
+  - stage: MARWIN_SUITE_CFAQE1
+    dependsOn: NA_CFAQE1
+    condition: and(succeeded(), eq(variables['MARWIN_SUITE_CFAQE1'], 'true'))
+    variables:
+      appvar: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: iOSazure-pipelines-Marwin-CD.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-qe1
+        Environment: qe1
+        Scope: Functional
+        Culture: en-US
+        Store: 3708
+        PBINumber: '871326,871327,871328,871329,871330,871331,871332,871333,871334,871335,871336,1247969,1248036,1248043,1248072,1252287,1248079,1248084,1248176,1248182,1248212,1248222,1248197,1248202,1248204,1248206,1248231,1248236'    
+        
+  - stage: 'NA_CFAQE2'
+    displayName: 'NA_CFAQE2'
+    jobs:
+    - job: NA_CFAQE2
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAQE2-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAQE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAQE2.result, 'succeeded'), eq(dependencies.NA_CFAQE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAQE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAQE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAQE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAQE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAQE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: SMOKE_SUITE_CFAQE2
+    dependsOn: NA_CFAQE2
+    condition: and(succeeded(), eq(variables['SMOKE_SUITE_CFAQE2'], 'true'))
+    variables: 
+      appvar: $[stageDependencies.NA_CFAQE2.NA_CFAQE2.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAQE2.NA_CFAQE2.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: azure-pipelines-CD.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-qe2
+        Environment: swqe4
+        Scope: Smoke
+        Area: DigitalApp
+        Culture: en-US
+        Store: "$(storeidcfaqe2)"
+        GroupBased: All
+
+  - stage: 'NA_QE'
+    displayName: 'NA_QE'
+    jobs:
+    - job: NA_QE
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-QE-NA-flavor.yml 
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_QE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_QE.result, 'succeeded'), eq(dependencies.NA_QE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_QE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_QE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_QE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_QE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_QE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_QE1'
+    displayName: 'NA_QE1'
+    jobs:
+    - job: NA_QE1
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-QE1-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_QE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_QE1.result, 'succeeded'), eq(dependencies.NA_QE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_QE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_QE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_QE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_QE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_QE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - powershell: |
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+        
+  - stage: 'NA_QE2'
+    displayName: 'NA_QE2'
+    jobs:
+    - job: NA_QE2
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-QE2-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_QE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_QE2.result, 'succeeded'), eq(dependencies.NA_QE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_QE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_QE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_QE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_QE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_QE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+
+  - stage: 'NA_CFAUAT'
+    displayName: 'NA_CFAUAT'
+    jobs:
+    - job: NA_CFAUAT
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAUAT-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "BuildNumber from template: $(CurrentBuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=CurrentBuildNumber;isOutput=true]$(CurrentBuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAUAT
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAUAT.result, 'succeeded'), eq(dependencies.NA_CFAUAT.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: SMOKE_SUITE_CFAUAT
+    dependsOn: NA_CFAUAT
+    condition: and(succeeded(), eq(variables['SMOKE_SUITE_CFAUAT'], 'true'))
+    variables: 
+      appvar: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: azure-pipelines-CD.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-uat
+        Environment: swqe5
+        Scope: Smoke
+        Area: DigitalApp
+        Culture: en-US
+        Store: "$(storeidcfauat)"
+        GroupBased: All
+
+  - stage: ADA_SUITE_CFAUAT
+    dependsOn: NA_CFAUAT
+    condition: and(succeeded(), eq(variables['ADA_SUITE_CFAUAT'], 'true'))
+    variables: 
+      appvar: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.CurrentBuildNumber']]      
+    jobs:
+    - template: iOSazure-pipelines-ADA-Integration.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-uat
+        Environment: swuat
+        Scope: Smoke
+        Area: ADAApp
+        Culture: en-US
+        Store: 25904
+        GroupBased: All 
+
+  - stage: MARWIN_SUITE_CFAUAT
+    dependsOn: NA_CFAUAT
+    condition: and(succeeded(), eq(variables['MARWIN_SUITE_CFAUAT'], 'true'))
+    variables:
+      appvar: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: iOSazure-pipelines-Marwin-CD.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-uat
+        Environment: uat
+        Scope: Functional
+        Culture: en-US
+        Store: 3708
+        PBINumber: '871326,871327,871328,871329,871330,871331,871332,871333,871334,871335,871336,1247969,1248036,1248043,1248072,1252287,1248079,1248084,1248176,1248182,1248212,1248222,1248197,1248202,1248204,1248206,1248231,1248236'    
+
+  # - stage: ANALYTICS_SUITE_CFAUAT
+  #   dependsOn: NA_CFAUAT
+  #   condition: and(succeeded(), eq(variables['ANALYTICS_SUITE_CFAUAT'], 'true'))
+  #   variables:
+  #     #relvar: $[stageDependencies.Subway_Android_BuildAndRelease.BuildAndRelease.outputs['relvar.ReleaseVersion']]
+  #     appvar: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber']]
+  #     buildnumber: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+
+  #   jobs:
+  #   - template: iOSazure-pipelines-analytics.yml@goldsuite
+  #     parameters:
+  #       Browser: ios
+  #       AppVersionNumber: $(appvar)
+  #       MWEnvironment: cfa-uat
+  #       Environment: swuat
+  #       Culture: en-US
+  #       Store: 25904
+  #       PBINumber: '1279349'
+
+  - stage: 'NA_CFAUAT1'
+    displayName: 'NA_CFAUAT1'
+    jobs:
+    - job: NA_CFAUAT1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAUAT1-NA-flavor.yml 
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAUAT1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAUAT1.result, 'succeeded'), eq(dependencies.NA_CFAUAT1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAUAT1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAUAT1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: SMOKE_SUITE_CFAUAT1
+    dependsOn: NA_CFAUAT1
+    condition: and(succeeded(), eq(variables['SMOKE_SUITE_CFAUAT1'], 'true'))
+    variables: 
+      appvar: $[stageDependencies.NA_CFAUAT1.NA_CFAUAT1.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAUAT1.NA_CFAUAT1.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: azure-pipelines-CD.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-uat1
+        Environment: swqe6
+        Scope: Smoke
+        Area: DigitalApp
+        Culture: en-US
+        Store: "$(storeidcfauat1)"
+        GroupBased: All
+        
+  - stage: 'NA_CFAUAT2'
+    displayName: 'NA_CFAUAT2'
+    jobs:
+    - job: NA_CFAUAT2
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAUAT2-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAUAT2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAUAT2.result, 'succeeded'), eq(dependencies.NA_CFAUAT2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAUAT2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAUAT2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_AWSQE'
+    displayName: 'NA_AWSQE'
+    jobs:
+    - job: NA_AWSQE
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-AWSQE-NA-flavor.yml 
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_AWSQE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_AWSQE.result, 'succeeded'), eq(dependencies.NA_AWSQE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_AWSQE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_AWSQE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_AWSQE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_AWSQE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_AWSQE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_AWSPE'
+    displayName: 'NA_AWSPE'
+    jobs:
+    - job: NA_AWSPE
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-AWSPE-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_AWSPE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_AWSPE.result, 'succeeded'), eq(dependencies.NA_AWSPE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_AWSPE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_AWSPE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_AWSPE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_AWSPE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_AWSPE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+         
+  - stage: 'NA_CFAPE'
+    displayName: 'NA_CFAPE'
+    jobs:
+    - job: NA_CFAPE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAPE-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAPE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAPE.result, 'succeeded'), eq(dependencies.NA_CFAPE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAPE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAPE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAPE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAPE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAPE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_CFAPE1'
+    displayName: 'NA_CFAPE1'
+    jobs:
+    - job: NA_CFAPE1
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAPE1-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAPE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAPE1.result, 'succeeded'), eq(dependencies.NA_CFAPE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAPE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAPE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAPE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAPE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAPE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+        
+  - stage: 'NA_CFAPE2'
+    displayName: 'NA_CFAPE2'
+    jobs:
+    - job: NA_CFAPE2
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAPE2-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAPE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAPE2.result, 'succeeded'), eq(dependencies.NA_CFAPE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAPE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAPE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAPE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAPE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAPE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_PRODBeta_awsQE'
+    displayName: 'NA_PRODBeta_awsQE'
+    jobs:
+    - job: NA_PRODBeta_awsQE
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-prodbetaawsQE-flavor.yml
+        - group: mob-ios-prod_beta
+      steps:
+        - template: NA/templates/ios-NA-azure-Prod_Beta-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_PRODBeta_awsQE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_PRODBeta_awsQE.result, 'succeeded'), eq(dependencies.NA_PRODBeta_awsQE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_PRODBeta_awsQE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_PRODBeta_awsQE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_PRODBeta_awsQE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_PRODBeta_awsQE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_PRODBeta_awsQE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS NA Beta Preprod'
+      steps:
+      - checkout: none
+      - template: NA/templates/NA_PROD_BETA_send_email_template.yml
+
+  - stage: 'NA_PRODUCTION'
+    displayName: 'NA_PRODUCTION'
+    jobs:
+    - job: NA_PRODUCTION
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-production-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-prod-fastlane-template.yml 
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+  
+    - job: NA_Sonarqube
+      pool:
+        name: Azure Pipelines
+        vmImage: macOS-15
+        demands:
+          - xcode 
+      displayName: 'Production_Sonarqube'
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+          - template: NA/variables/var-sonarqube-flavor.yml
+      steps:
+          - template: NA/SonarQube/ios-sonarqube-template.yml
+          - powershell: |
+             echo "SonarQube URL from template: $(SonarQubeBranchURL)"
+             echo "##vso[task.setvariable variable=SonarQubeBranchURL;isOutput=true]$(SonarQubeBranchURL)"
+            name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: 
+        - NA_PRODUCTION
+        - NA_Sonarqube
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+      condition: |
+        and(
+          in(dependencies.NA_PRODUCTION.result, 'Succeeded', 'SucceededWithIssues'),
+          in(dependencies.NA_Sonarqube.result, 'Succeeded', 'SucceededWithIssues', 'Failed')
+        )
+      variables:
+        AppVersion: $[ dependencies.NA_PRODUCTION.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_PRODUCTION.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_PRODUCTION.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_PRODUCTION.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_PRODUCTION.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'SUBWAY NA iOS PRODUCTION'
+        SonarQubeBranchURL: $[ dependencies.NA_Sonarqube.outputs['DisplayReleaseDetails.SonarQubeBranchURL'] ]
+      steps:
+      - checkout: none
+      - template: NA/templates/NA_PROD_send_email_template.yml
+
+  # - stage: 'Smoke_Gatewaycheck'
+  #   displayName: 'Smoke_Gatewaycheck'
+  #   jobs:
+  #   - template: azure-pipelines-digital-CD.yml@AutomationTestSuiteRepo
+  #     parameters: 
+  #      Browser: ios     
+  #      Scope: Smoke
+  #      Area : DigitalApp
+  #      Country: US  
+  #      Language: en
+  #      Culture: en-US
+  #      Store: 55363
+
+  # - stage: 'Integration_Gatewaycheck'
+  #   displayName: 'Integration_Gatewaycheck'
+  #   jobs:
+  #   - template: azure-pipelines-digital-CD.yml@AutomationTestSuiteRepo
+  #     parameters:      
+  #      Browser: ios     
+  #      Scope: Integration
+  #      Area : DigitalApp
+  #      Country: US  
+  #      Language: en
+  #      Culture: en-US
+  #      Store: 55363
+
+  # - stage: 'Functional_Gatewaycheck'
+  #   displayName: 'Functional_Gatewaycheck'
+  #   jobs:
+  #   - template: azure-pipelines-digital-CD.yml@AutomationTestSuiteRepo
+  #     parameters:      
+  #      Browser: ios     
+  #      Scope: Functional
+  #      Area : DigitalApp
+  #      Country: US  
+  #      Language: en
+  #      Culture: en-US
+  #      Store: 55363
+
+  - stage: 'NA_Sonarqube'
+    displayName: 'NA_Sonarqube'
+    jobs:
+    - job: NA_Sonarqube
+      workspace:
+        clean: all
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-sonarqube-flavor.yml
+      steps:
+        - template: NA/SonarQube/ios-sonarqube-template.yml
+        - powershell: |
+             echo "SonarQube URL from template: $(SonarQubeBranchURL)"
+             echo "##vso[task.setvariable variable=SonarQubeBranchURL;isOutput=true]$(SonarQubeBranchURL)"
+          name: DisplayReleaseDetails
+    #     - powershell: |
+    #         echo "AppVersion from template: $(AppVersion)"
+    #         echo "BuildNumber from template: $(BuildNumber)"
+    #         echo "AppCenterName from Template: $(AppCenterName)"
+    #         echo "AppCenterURL from Template: $(AppCenterURL)"
+    #         echo "Firebase Download URL: $(FirebaseURL)"
+    #         echo "Firebase Console URL: $(FirebaseConsoleURL)"
+    #         echo "Firebase Release URL: $(FirebaseReleaseURL)"
+    #         echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+    #         echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+    #         
+    #         
+    #          echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+    #         echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+    #         echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+    #       name: DisplayReleaseDetails
+
+    # - job: SendEmail
+    #   dependsOn: NA_Sonarqube
+    #   displayName: 'Send Email Notification'
+    #   pool:
+    #     name: SubwaycomOn-PremAgentPool
+    #   variables:
+    #     AppVersion: $[ dependencies.NA_Sonarqube.outputs['DisplayReleaseDetails.AppVersion'] ]
+    #     BuildNumber: $[ dependencies.NA_Sonarqube.outputs['DisplayReleaseDetails.BuildNumber'] ]
+    #     AppCenterName: $[ dependencies.NA_Sonarqube.outputs['DisplayReleaseDetails.AppCenterName'] ]
+    #     AppCenterURL: $[ dependencies.NA_Sonarqube.outputs['DisplayReleaseDetails.AppCenterURL'] ]
+    #     FirebaseURL: $[ dependencies.NA_Sonarqube.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+    #     FirebaseConsoleURL: $[ dependencies.NA_Sonarqube.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+    #     FirebaseReleaseURL: $[ dependencies.NA_Sonarqube.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+    #   steps:
+    #   - powershell: |
+    #       echo "AppVersion from template: $(AppVersion)"
+    #       echo "BuildNumber from template: $(BuildNumber)"
+    #       echo "AppCenterName from template: $(AppCenterName)"
+    #       echo "AppCenterURL from template: $(AppCenterURL)"
+    #       echo "FirebaseURL from template: $(FirebaseURL)"
+    #       echo "FirebaseConsoleURL from template: $(FirebaseConsoleURL)"
+    #       echo "FirebaseReleaseURL from template: $(FirebaseReleaseURL)"
+    #     name: echovar
+    #   - template: devops_files/non-prod/send_email_template.yml
