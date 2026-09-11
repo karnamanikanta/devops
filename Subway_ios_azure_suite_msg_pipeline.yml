@@ -1,0 +1,180 @@
+name: $(Rev:r)
+trigger:
+- noneCFA
+variables:
+  - group: EmailRecipients
+  - group: P12Password_Lowersandprod
+
+pool:
+  name: Azure Pipelines
+  vmImage: macOS-15
+  demands:
+  - xcode
+       
+resources:
+  repositories: 
+    - repository: goldsuite
+      type: git
+      name: QE.UI.Automation.Digital.CICD
+      ref: refs/heads/main
+
+stages:
+  - stage: 'NA_CFAQE1'
+    displayName: 'NA_CFAQE1'
+    dependsOn: []
+    jobs:
+    - job: NA_CFAQE1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAQE1-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAQE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAQE1.result, 'succeeded'), eq(dependencies.NA_CFAQE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAQE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'NA_CFAUAT'
+    displayName: 'NA_CFAUAT'
+    dependsOn: []
+    jobs:
+    - job: NA_CFAUAT
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: NA/variables/var-CFAUAT-NA-flavor.yml
+      steps:
+        - template: NA/templates/ios-azure-non_prod_fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "BuildNumber from template: $(CurrentBuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=CurrentBuildNumber;isOutput=true]$(CurrentBuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: NA_CFAUAT
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.NA_CFAUAT.result, 'succeeded'), eq(dependencies.NA_CFAUAT.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.NA_CFAUAT.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'iOS NA SANDBOX'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+
+  - stage: ADA_SUITE_CFAQE1
+    dependsOn: NA_CFAQE1
+    condition: and(succeeded(), eq(variables['ADA_SUITE_CFAQE1'], 'true'))
+    variables:
+      appvar: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: iOSazure-pipelines-ADA-Integration.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-qe1
+        Environment: swuat
+        Scope: Smoke
+        Area: ADAApp
+        Culture: en-US
+        Store: 25904
+        GroupBased: All 
+
+  - stage: MARWIN_SUITE_CFAQE1
+    dependsOn: NA_CFAQE1
+    condition: and(succeeded(), eq(variables['MARWIN_SUITE_CFAQE1'], 'true'))
+    variables:
+      appvar: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAQE1.NA_CFAQE1.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: iOSazure-pipelines-Marwin-CD.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-qe1
+        Environment: qe1
+        Scope: Functional
+        Culture: en-US
+        Store: 3708
+        PBINumber: '871326,871327,871328,871329,871330,871331,871332,871333,871334,871335,871336,1247969,1248036,1248043,1248072,1252287,1248079,1248084,1248176,1248182,1248212,1248222,1248197,1248202,1248204,1248206,1248231,1248236'  
+
+
+  - stage: ADA_SUITE_CFAUAT
+    dependsOn: NA_CFAUAT
+    condition: and(succeeded(), eq(variables['ADA_SUITE_CFAUAT'], 'true'))
+    variables: 
+      appvar: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.CurrentBuildNumber']]      
+    jobs:
+    - template: iOSazure-pipelines-ADA-Integration.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-uat
+        Environment: swuat
+        Scope: Smoke
+        Area: ADAApp
+        Culture: en-US
+        Store: 25904
+        GroupBased: All 
+
+  - stage: MARWIN_SUITE_CFAUAT
+    dependsOn: NA_CFAUAT
+    condition: and(succeeded(), eq(variables['MARWIN_SUITE_CFAUAT'], 'true'))
+    variables:
+      appvar: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber']]
+      buildnumber: $[stageDependencies.NA_CFAUAT.NA_CFAUAT.outputs['DisplayReleaseDetails.CurrentBuildNumber']]
+    jobs:
+    - template: iOSazure-pipelines-Marwin-CD.yml@goldsuite
+      parameters:
+        Browser: ios
+        AppVersionNumber: $(appvar)
+        MWEnvironment: cfa-uat
+        Environment: uat
+        Scope: Functional
+        Culture: en-US
+        Store: 3708
+        PBINumber: '871326,871327,871328,871329,871330,871331,871332,871333,871334,871335,871336,1247969,1248036,1248043,1248072,1252287,1248079,1248084,1248176,1248182,1248212,1248222,1248197,1248202,1248204,1248206,1248231,1248236' 
