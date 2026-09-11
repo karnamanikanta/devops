@@ -1,0 +1,16 @@
+variables:
+  lane: enterprise_build
+  BuildVariant: >
+    region:'Finland'
+    scheme:'FL CFA QE'
+    configuration:'CFA-QE'
+    archive_suffix:'EMEACFAQE'
+    export_options_path:'cicd/EMEA_FINLAND/variables/ExportOptions.plist'
+    google_service_plist:'$(System.DefaultWorkingDirectory)/Subway/Subway/Firebase/Finland/Stage/GoogleService-Info.plist'
+    info_plist_path:'$(System.DefaultWorkingDirectory)/Subway/Source/Finland-Info.plist'
+    firebase_app_id:'1:25655352521:ios:fdead49bb5a58f2ef60118'
+    ipa_source_name:'SUBWAY® EMEA.ipa'
+    firebase_groups:'Subway-Mobile-Leads-Group,Subway-Mobile-Testing-Group'
+  powershellflag: 'true'
+  set_buildnumberpath: 'Subway/cicd/EMEA_FINLAND/devops_files/non_prod/SetBuildNumber.sh'
+  APPCENTER_API_TOKEN: '$(api_token)'
