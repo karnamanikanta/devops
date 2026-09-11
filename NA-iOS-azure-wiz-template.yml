@@ -1,0 +1,17 @@
+steps:
+    - script: |
+        mkdir -p $(Agent.TempDirectory)/$(wizCliUniquePath)
+      displayName: 'Create wizCli Directory'
+
+    - task: wiz@0
+      displayName: 'Wiz Directory Scan'
+      inputs:
+        command: 'dir'
+        clientid: '$(WIZ-CLIENT-ID)'
+        secret: '$(WIZ-CLIENT-SECRET-KEY)'
+        path: '.'
+        policyHitsOnly: true
+        fileHashesScan: true
+        project: '95fd77e4-988f-5b37-8491-179b6e271b1e'
+        sensitiveData: true
+        wizCliPath: '$(Agent.TempDirectory)/$(wizCliUniquePath)'
