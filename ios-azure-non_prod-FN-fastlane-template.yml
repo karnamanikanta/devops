@@ -1,0 +1,223 @@
+        
+   steps:
+
+    - task: InstallAppleCertificate@2
+      displayName: 'Install an Apple certificate'
+      inputs:
+         certSecureFile: 'Lowers_Certificates.p12'
+         certPwd: '$(NonProd_p12password)'    
+
+    - task: InstallAppleProvisioningProfile@1
+      inputs:
+         provisioningProfileLocation: 'secureFiles'
+         provProfileSecureFile: 'Finland_sandbox_provisioning_profile_03022027.mobileprovision'
+
+    - task: InstallAppleProvisioningProfile@1  
+      inputs:
+         provisioningProfileLocation: 'secureFiles'
+         provProfileSecureFile: 'Finland_sandbox_provisioning_pf_richnotification_03022027.mobileprovision'
+
+    - task: InstallAppleProvisioningProfile@1
+      inputs:
+         provisioningProfileLocation: 'secureFiles'
+         provProfileSecureFile: 'Finland_sandbox_provisioning_pf_siriintent_03022027.mobileprovision'
+
+    - task: InstallAppleProvisioningProfile@1    
+      inputs:
+         provisioningProfileLocation: 'secureFiles'
+         provProfileSecureFile: 'Finland_sandbox_provisioning_pf_siriintentui_03022027.mobileprovision'
+
+
+    - task: Bash@3
+      displayName: 'Versions Used (iOS)'
+      inputs:
+        targetType: 'inline'
+        script: |
+
+          echo "🖥️ Operating System Info"
+          echo "------------------------"
+          echo "🖥️ OS Name: $(sw_vers -productName)"
+          echo "🖥️ macOS Version: $(sw_vers -productVersion)"
+          echo "🖥️ Build Version: $(sw_vers -buildVersion)"
+          echo ""
+
+          echo "🤖 Agent Info"
+          echo "-------------"
+          echo "🤖 Agent Name: $AGENT_NAME"
+          echo "🤖 Agent Version: $AGENT_VERSION"
+          echo ""
+
+          echo "🧵 Programming Languages"
+          echo "------------------------"
+          echo "🔧 Bash version: $(bash --version | head -n 1)"
+          echo "☕️ Java version: $(java -version 2>&1 | head -n 1)"
+          echo "💎 Ruby version: $(ruby --version)"
+          echo "🧵 Swift version: $(swift --version | head -n 1)"
+          echo "🐍 Python version: $(python3 --version)"
+          echo "📦 Node.js version: $(node --version)"
+          echo ""
+
+          echo "📦 Development Tools"
+          echo "--------------------"
+          echo "📦 Bundler version: $(bundler --version)"
+          echo "🚀 Fastlane version: $(fastlane --version | head -n 2 | tail -n 1)"
+          echo "🧰 Xcode version: $(xcodebuild -version | head -n 1)"
+          echo "📱 iOS SDK version: $(xcrun --sdk iphoneos --show-sdk-version)"
+          echo "🧪 Simulator SDK version: $(xcrun --sdk iphonesimulator --show-sdk-version)"
+          echo "📚 CocoaPods version: $(pod --version)"
+          echo "📦 Gem version: $(gem --version)"
+          echo "📦 NPM version: $(npm --version)"
+          echo "📦 pip version: $(pip3 --version)"
+          echo "🧪 clang version: $(clang --version | head -n 1)"
+
+    - task: DownloadSecureFile@1
+      name: downloadFirebasecredentials
+      displayName: 'Download Firebase Credentials'
+      inputs:
+        secureFile: '49f11de0-994c-4e78-822f-7263ec835e6b'
+
+    - task: Bash@3
+      name: SetPodHash
+      displayName: 'Set build number and Generate Podfile.lock hash'
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "Calculating Podfile.lock hash..."
+          PODFILE_LOCK_PATH="$(Build.SourcesDirectory)/Subway/Podfile.lock"
+          if [ -f "$PODFILE_LOCK_PATH" ]; then
+            PODFILE_LOCK_HASH=$(shasum -a 256 "$PODFILE_LOCK_PATH" | awk '{print $1}')
+            echo "##vso[task.setvariable variable=PODFILE_LOCK_HASH;isOutput=true]$PODFILE_LOCK_HASH"
+            echo "podfile.lock hash: $PODFILE_LOCK_HASH"
+          else
+            echo "ERROR: Podfile.lock not found at $PODFILE_LOCK_PATH"
+            exit 1
+          fi
+          Ver_String="$(defaults read $SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/Finland-Info CFBundleShortVersionString)"
+          echo "Version_String=$Ver_String"
+          Build_Number_FromFile="$(defaults read $SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/Finland-Info CFBundleVersion)"
+          Number="$BUILD_BUILDNUMBER"
+          Updated_Build_Number=$(($Build_Number_FromFile + $Number))
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/Finland-Info.plist" $Updated_Build_Number
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/Finland QE1-Info.plist" $Updated_Build_Number
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/SiriIntent/Info.plist" $Updated_Build_Number
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/SiriIntentUI/Info.plist" $Updated_Build_Number
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/RichNotification/Info.plist" $Updated_Build_Number
+
+    - task: Cache@2
+      displayName: 'Cache CocoaPods dependencies'
+      inputs:
+        key: 'sqpods11 | "$(Agent.OS)" | $(SetPodHash.PODFILE_LOCK_HASH)'
+        restoreKeys: |
+          sqpods11 | "$(Agent.OS)"
+          sqpods11
+        path: '$(Build.SourcesDirectory)/Subway/Pods'
+        cacheHitVar: 'PODS_CACHE_RESTORED'
+
+   
+    - task: PowerShell@2
+      condition: eq(variables['powershellflag'], 'true')
+      displayName: 'PFs override'
+      inputs:
+         targetType: 'inline'
+         script: |
+           $GetFilePath="$Env:BUILD_SOURCESDIRECTORY\Subway\Subway.xcodeproj\project.pbxproj"
+           (Get-Content $GetFilePath).replace('Development RichNotification', 'com.subway.sandbox.mobile.finland.richnotification') | Set-Content $GetFilePath -Force
+           (Get-Content $GetFilePath).replace('Development com.subway.sandbox.siriintentui', 'com.subway.sandbox.mobile.finland.siriintentui') | Set-Content $GetFilePath -Force
+           (Get-Content $GetFilePath).replace('Development com.subway.sandbox.siriintent', 'com.subway.sandbox.mobile.finland.siriintent') | Set-Content $GetFilePath -Force   
+           
+    - task: Bash@3
+      displayName: 'Fastlane gym Xcode Build'
+      inputs:
+        targetType: 'inline'
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          cd $SYSTEM_DEFAULTWORKINGDIRECTORY/Subway
+          
+          # ----- CONFIG -----
+          BUNDLER_VERSION="${BUNDLER_VERSION:-2.4.22}"   # Fastlane requires Bundler 2.x
+          echo "Ruby info:"
+          which ruby || true
+          ruby -v || true
+
+          echo "Ensuring Bundler ${BUNDLER_VERSION} is installed (we will NOT use the global shim)..."
+          gem uninstall -aIx bundler || true
+          gem install bundler -v "${BUNDLER_VERSION}"
+
+          # Create a project-local Bundler wrapper
+          mkdir -p ./bin
+          cat > ./bin/bundle <<'RUBY_WRAPPER'
+          #!/usr/bin/env ruby
+          require 'rubygems'
+          FORCED_VERSION = ENV.fetch('FORCED_BUNDLER_VERSION')
+          gem 'bundler', "= #{FORCED_VERSION}"
+          load Gem.bin_path('bundler', 'bundle', FORCED_VERSION)
+          RUBY_WRAPPER
+          export FORCED_BUNDLER_VERSION="${BUNDLER_VERSION}"
+          chmod +x ./bin/bundle
+
+          echo "Wrapper bundle version (should be ${BUNDLER_VERSION}):"
+          ./bin/bundle -v
+
+          echo "Running bundle install (local then remote fallback)..."
+          ./bin/bundle install --local || ./bin/bundle install
+
+          if [ ! -f Gemfile.lock ]; then
+            echo "Gemfile.lock missing—creating with Bundler ${BUNDLER_VERSION}..."
+            ./bin/bundle install
+          fi
+          grep -A2 "BUNDLED WITH" Gemfile.lock || true
+
+          # ----- Fastlane environment -----
+          export FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=600
+          export FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6
+          # Get version from Info.plist (for iOS version)
+          INFO_PLIST_FILE=$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/Finland-Info.plist
+          function getPlistProperty {
+            PROP_KEY=$1
+            PROP_VALUE=$(defaults read $INFO_PLIST_FILE $PROP_KEY)
+            echo "$PROP_VALUE"
+          }
+          GetAppVersion=$(getPlistProperty "CFBundleShortVersionString")
+          echo "GetAppVersion=$GetAppVersion"
+          echo "##vso[task.setvariable variable=AppVersion;]$GetAppVersion"
+
+          GetBuildNumber=$(getPlistProperty "CFBundleVersion")
+          echo "GetBuildNumber=$GetBuildNumber"
+          echo "##vso[task.setvariable variable=BuildNumber;]$GetBuildNumber"
+          GetFileNamePath="$(downloadFirebasecredentials.secureFilePath)"
+          # Get file directory and name
+          GetFileDirectory=$(dirname "$GetFileNamePath")
+          GetFileName=$(basename "$GetFileNamePath")
+          # Print file directory and name
+          echo "$GetFileDirectory"
+          echo "$GetFileName"
+          export SECUREFILEPATH="$GetFileDirectory/$GetFileName"
+          echo "Running Fastlane for variant: $(BuildVariant)"
+          BUILD_OUTPUT=$(bundle exec fastlane $(lane) $(BuildVariant) 2>&1 | tee fastlane_output.log)
+          echo "$BUILD_OUTPUT"
+          cat fastlane_output.log
+
+          # Extract the Firebase app binary download URL from Fastlane output
+          FIREBASE_URL=$(echo "$BUILD_OUTPUT" | grep -o 'https://firebaseappdistribution.googleapis.com/[^ ]*')
+          echo "Firebase Download URL: $FIREBASE_URL"
+          echo "##vso[task.setvariable variable=FirebaseURL;]$FIREBASE_URL"
+
+          # Extract Firebase Console URL
+          FIREBASE_CONSOLE_URL=$(echo "$BUILD_OUTPUT" | grep -o 'https://console.firebase.google.com/project/[^ ]*')
+          echo "Firebase Console URL: $FIREBASE_CONSOLE_URL"     
+          echo "##vso[task.setvariable variable=FirebaseConsoleURL;]$FIREBASE_CONSOLE_URL"
+
+          # Extract the URL for sharing the release with testers from the fastlane output
+          FIREBASE_RELEASE_URL=$(echo "$BUILD_OUTPUT" | grep -o 'https://appdistribution.firebase.google.com/testerapps/[^ ]*')
+          echo "Firebase Release URL: $FIREBASE_RELEASE_URL"
+          echo "##vso[task.setvariable variable=FirebaseReleaseURL;]$FIREBASE_RELEASE_URL"
+
+          IPA_PATH=$(echo "$BUILD_OUTPUT" | grep "IPArenamedto:" | sed 's/.*IPArenamedto: *//' | tr -d '[:space:]')
+          echo "##vso[task.setvariable variable=IpaPath]$IPA_PATH"
+          echo "IPA File Path: $IPA_PATH"
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: drop'
+      inputs:
+        PathtoPublish: '$(IpaPath)'
