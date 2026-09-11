@@ -1,0 +1,194 @@
+CERTIFICATES RENEWAL TICKET CREATION DOCUMENT 
+IOS Airship: 
+NA: 
+Finalized Change Request: Upload Certificate to Airship Portal (NA iOS) 
+Short Description 
+Upload Certificate to Airship portal NA iOS – expires on 09/28/2025 
+Description 
+Upload the new certificate to the Airship portal for NA iOS. The current certificate expires on 
+09/28/2025. Failure to update will impact Wallet services due to insecure connections, potentially 
+causing service downtime and user inconvenience. 
+Justification 
+The Airship portal certificate for NA iOS is expiring on 09/28/2025. Timely renewal is essential to 
+maintain secure connections and uninterrupted Wallet service functionality. 
+Configuration Item 
+Mobile App iOS NA 
+CMDB Update Required? 
+No 
+Risk and Impact 
+Risk Level: Moderate 
+Impact: Expiration of the certificate will disrupt secure connections, leading to service downtime 
+and operational interruptions for Wallet services. 
+Approval 
+CAB Approval required 
+Status 
+Draft 
+Planned Dates examples  
+• Start Date: 2025-09-16 14:00:00 
+• End Date: 2025-09-16 18:00:00 
+• Test Start Date: 2025-09-09 10:00:00 
+• Test End Date: 2025-09-11 10:00:00 
+Implementation Plan 
+1. Log in to Airship portal 
+2. Click on NA prod certificate 
+3. Navigate to Settings > Certificates in the Airship portal. 
+4. Go to Project Certificates. 
+5. Select iOS and click Replace Certificate. 
+6. Choose Upload a new .p12. 
+7. Enter the certificate password (attached). 
+8. Click Choose File and upload the new certificate. 
+9. Click Save. 
+Backout Plan 
+• Approach 1: Revert to the existing certificate (expiring on 07/28/2024). 
+• Approach 2: Generate a new .p12 certificate and replace again if needed. 
+Post Deployment Validation Plan 
+1. Verify the updated expiry date in the Airship portal. 
+2. Order a test cookie to validate ordering flows for:  
+o Instore 
+o Curbside 
+o Delivery 
+(NA region only) all 3 regions ( US, CA and PR) 
+Tuki: 
+Finalized Change Request: Upload Certificate to Airship Portal (TUKI iOS) 
+Short Description 
+Upload Certificate to Airship portal TUKI iOS – expires on 09/28/2025 
+Description 
+Upload the new certificate to the Airship portal for TUKI iOS. The current certificate expires on 
+09/28/2025. Failure to update will impact Wallet services due to insecure connections, potentially 
+causing service downtime and user inconvenience. 
+Justification 
+The Airship portal certificate for TUKI iOS is expiring on 09/28/2025. Timely renewal is essential to 
+maintain secure connections and uninterrupted Wallet service functionality. 
+Configuration Item 
+Mobile App iOS TUKI 
+CMDB Update Required? 
+No 
+Risk and Impact 
+Risk Level: Moderate 
+Impact: Expiration of the certificate will disrupt secure connections, leading to service downtime 
+and operational interruptions for Wallet services. 
+Approval 
+CAB Approval needed 
+Status 
+Draft 
+Planned Dates examples 
+• Start Date: 2025-09-16 14:00:00 
+• End Date: 2025-09-16 18:00:00 
+• Test Start Date: 2025-09-09 10:00:00 
+• Test End Date: 2025-09-11 10:00:00 
+Implementation Plan 
+1. Log in to Airship portal 
+2. Click on TUKI prod certificate 
+3. Navigate to Settings > Certificates in the Airship portal. 
+4. Go to Project Certificates. 
+5. Select iOS and click Replace Certificate. 
+6. Choose Upload a new .p12. 
+7. Enter the certificate password (attached). 
+8. Click Choose File and upload the new certificate. 
+9. Click Save. 
+Backout Plan 
+• Approach 1: Revert to the existing certificate (expiring on 07/28/2024). 
+• Approach 2: Generate a new .p12 certificate and replace again if needed. 
+Post Deployment Validation Plan 
+1. Verify the updated expiry date in the Airship portal. 
+2. Order a test cookie to validate ordering flows for:  
+o Instore 
+o Curbside 
+o Delivery 
+(TUKI region only) 
+Germany: 
+Finalized Change Request: Upload Certificate to Airship Portal (Germany iOS) 
+Short Description 
+Upload Certificate to Airship portal Germany iOS – expires on 09/28/2025 
+Description 
+Upload the new certificate to the Airship portal for Germany iOS. The current certificate expires on 
+09/28/2025. Failure to update will impact Wallet services due to insecure connections, potentially 
+causing service downtime and user inconvenience. 
+Justification 
+The Airship portal certificate for Germany iOS is expiring on 09/28/2025. Timely renewal is 
+essential to maintain secure connections and uninterrupted Wallet service functionality. 
+Configuration Item 
+Mobile App iOS Germany 
+CMDB Update Required? 
+No 
+Risk and Impact 
+Risk Level: Moderate 
+Impact: Expiration of the certificate will disrupt secure connections, leading to service downtime 
+and operational interruptions for Wallet services. 
+Approval 
+CAB Approval needed 
+Status 
+Draft 
+Planned Dates examples 
+• Start Date: 2025-09-16 14:00:00 
+• End Date: 2025-09-16 18:00:00 
+• Test Start Date: 2025-09-09 10:00:00 
+• Test End Date: 2025-09-11 10:00:00 
+Implementation Plan 
+1. Log in to Airship portal 
+2. Click on Germany prod certificate 
+3. Navigate to Settings > Certificates in the Airship portal. 
+4. Go to Project Certificates. 
+5. Select iOS and click Replace Certificate. 
+6. Choose Upload a new .p12 
+7. Enter the certificate password (attached). 
+8. Click Choose File and upload the new certificate. 
+9. Click Save. 
+Backout Plan 
+• Approach 1: Revert to the existing certificate (expiring on 07/28/2024). 
+• Approach 2: Generate a new .p12 certificate and replace again if needed. 
+Post Deployment Validation Plan 
+1. Verify the updated expiry date in the Airship portal. 
+2. Order a test cookie to validate ordering flows for:  
+o Instore 
+o Curbside 
+o Delivery 
+(Germany region only) 
+Finland: (CHG0077121) 
+Finalized Change Request: Upload Certificate to Airship Portal (FIN iOS) 
+Short Description 
+Upload Certificate to Airship portal FIN iOS – expires on 09/28/2025 
+Description 
+Upload the new certificate to the Airship portal for Finland iOS. The current certificate expires on 
+09/28/2025. Failure to update will impact Wallet services due to insecure connections, potentially 
+causing service downtime and user inconvenience. 
+Justification 
+The Airship portal certificate for Finland iOS is expiring on 09/28/2025. Timely renewal is essential 
+to maintain secure connections and uninterrupted Wallet service functionality. 
+Configuration Item 
+Mobile App iOS FI 
+CMDB Update Required? 
+No 
+Risk and Impact 
+Risk Level: Moderate 
+Impact: Expiration of the certificate will disrupt secure connections, leading to service downtime 
+and operational interruptions for Wallet services. 
+Approval 
+CAB Approval required 
+Status 
+Draft 
+Planned Dates examples 
+• Start Date: 2025-09-16 14:00:00 
+• End Date: 2025-09-16 18:00:00 
+• Test Start Date: 2025-09-09 10:00:00 
+• Test End Date: 2025-09-11 10:00:00 
+Implementation Plan 
+1.Log in to Airship portal 
+2.Click on Finland prod certificate 
+3.Navigate to Settings > Certificates in the Airship portal. 
+4.Go to Project Certificates. 
+5.Select iOS and click Replace Certificate. 
+6.Choose Upload a new .p12 
+7.Enter the certificate password (attached). 
+8.Click Choose File and upload the new certificate. 
+9.Click Save. 
+Backout Plan 
+• Approach 1: Revert to the existing certificate (expiring on 07/28/2024). 
+• Approach 2: Generate a new .p12 certificate and replace again if needed. 
+Post Deployment Validation Plan 
+1.Verify the updated expiry date in the Airship portal. 
+2.Order a test cookie to validate ordering flows for:  
+o Instore 
+o Curbside 
+o Delivery 
+(Finland region only) 
