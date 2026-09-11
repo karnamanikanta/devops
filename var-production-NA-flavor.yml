@@ -1,0 +1,14 @@
+variables:
+  APPCENTER_API_TOKEN: '$(api_token)'
+  lane: NAproduction
+  EXTERNAL_TESTING_GROUPS: >
+    'UK Test Group',
+    'Apollo - Puerto Rico Pilot Test Group',
+    'ApplePay Test Group',
+    'Canada Delivery',
+    'DDD Soft launch',
+    'Developers',
+    'External TestFlight Testing',
+    'forced upgrade test',
+    'MarTech Testing Team',
+    'Order Redesign TF Team'
