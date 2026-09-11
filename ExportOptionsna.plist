@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>compileBitcode</key>
+	<true/>
+	<key>destination</key>
+	<string>export</string>
+	<key>method</key>
+	<string>enterprise</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.subway.sandbox.mobile</key>
+		<string>match InHouse com.subway.sandbox.mobile</string>
+		<key>com.subway.sandbox.mobile.richnotification</key>
+		<string>com.subway.sandbox.mobile.richnotification</string>
+		<key>com.subway.sandbox.mobile.siriintent</key>
+		<string>sandbox com.subway.sandbox.mobile.siriintent</string>
+		<key>com.subway.sandbox.mobile.siriintentui</key>
+		<string>sandbox com.subway.sandbox.mobile.siriintentui</string>
+	</dict>
+	<key>signingCertificate</key>
+	<string>Apple Distribution</string>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>stripSwiftSymbols</key>
+	<true/>
+	<key>teamID</key>
+	<string>69647Q2WA8</string>
+	<key>thinning</key>
+	<string>&lt;none&gt;</string>
+</dict>
+</plist>
