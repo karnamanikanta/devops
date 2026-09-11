@@ -1,0 +1,9 @@
+variables:
+  scheme: 'UAT'
+  Configuration: 'UAT'
+  SDK: 'iphoneos'
+  p12Password: 'Subway@2022'
+  TestSDK: 'iphonesimulator'
+  TestConfiguration: 'UAT'
+  lane: NA_SONARQUBE
+  
