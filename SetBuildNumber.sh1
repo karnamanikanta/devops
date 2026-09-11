@@ -1,0 +1,8 @@
+Ver_String="$(defaults read "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA-Info.plist" CFBundleShortVersionString)"
+echo "Version_String=$Ver_String"
+Build_Number_FromFile="$(defaults read "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA-Info.plist" CFBundleVersion | tr -d '[:space:]' | ruby -e 'print gets.chomp')"
+ruby "$SYSTEM_DEFAULTWORKINGDIRECTORY/setbuildnum.rb" "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA-Info.plist" "$Build_Number_FromFile" | awk '{$1=$1};1'
+ruby "$SYSTEM_DEFAULTWORKINGDIRECTORY/setbuildnum.rb" "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA QE1-Info.plist" "$Build_Number_FromFile" | awk '{$1=$1};1'
+ruby "$SYSTEM_DEFAULTWORKINGDIRECTORY/setbuildnum.rb" "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/SiriIntent/Info.plist" "$Build_Number_FromFile" | awk '{$1=$1};1'
+ruby "$SYSTEM_DEFAULTWORKINGDIRECTORY/setbuildnum.rb" "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/SiriIntentUI/Info.plist" "$Build_Number_FromFile" | awk '{$1=$1};1'
+ruby "$SYSTEM_DEFAULTWORKINGDIRECTORY/setbuildnum.rb" "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/RichNotification/Info.plist" "$Build_Number_FromFile" | awk '{$1=$1};1'
