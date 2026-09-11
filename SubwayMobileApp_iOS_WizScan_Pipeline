@@ -1,0 +1,25 @@
+name: $(Rev:r)
+trigger:
+  branches:
+    include:
+      - develop
+
+pr:
+  branches:
+    include:
+      - develop
+
+pool:
+  name: Azure Pipelines
+  vmImage: macOS-15
+  demands:
+  - xcode
+     
+stages:
+  - stage: 'NA_WizScan_Report'
+    displayName: 'NA_WizScan_Report'
+    jobs:
+      - job: NA_WizScan_Report
+        steps:
+          - template: NA/templates/NA-iOS-azure-wiz-template.yml
+    
