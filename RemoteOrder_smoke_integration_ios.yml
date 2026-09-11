@@ -1,0 +1,101 @@
+
+steps:    
+    - task: PowerShell@2
+      displayName: RemoteOrder_Smoke
+      enabled: true
+      inputs:
+        targetType: 'inline'
+        script: |
+          $ErrorActionPreference="stop"
+          $Error.Clear()
+          Try
+          {
+          $Token = $env:SYSTEM_ACCESSTOKEN
+          $headers = @{Authorization = "Bearer $Token"}
+          $Body = '{
+              "resources": {
+                  "repositories": {
+                      "self": {
+                         "refName": "refs/heads/features"
+                      }
+                  }
+              },
+           "templateParameters": {
+              "Browser": "ios",
+              "Scope":"Smoke",
+          	  "Area": "DigitalApp",
+          	  "Country": "US",
+              "Language": "en",
+          	  "Culture": "en-US",
+              "Store":"55363"			
+            }
+
+            }'
+                              
+             $Parameters = @{
+              Method = "POST"
+              Uri =  "https://dev.azure.com/subwaytechnology/Remote%20Order/_apis/pipelines/1646/runs?api-version=6.0-preview.1"
+              Body = ($Body) 
+              ContentType = "application/json"
+              Header = ($headers)
+              }
+              Invoke-RestMethod @Parameters
+              }
+          catch
+          {
+          Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+          Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+          exit 1
+          }
+
+      env:
+         SYSTEM_ACCESSTOKEN: $(system.accesstoken)    
+
+    - task: PowerShell@2
+      displayName: RemoteOrder_Integration
+      enabled: true
+      inputs:
+        targetType: 'inline'
+        script: |
+          $ErrorActionPreference="stop"
+          $Error.Clear()
+          Try
+          {
+          $Token = $env:SYSTEM_ACCESSTOKEN
+          $headers = @{Authorization = "Bearer $Token"}
+          $Body = '{                  
+             "resources": {
+                 "repositories": {
+                      "self": {
+                          "refName": "refs/heads/features"
+                      }
+                 }
+             },
+           "templateParameters": {
+              "Browser": "ios",
+              "Scope": "Integration",
+          	  "Area": "DigitalApp",
+          	  "Country": "US",
+              "Language": "en",
+          	  "Culture": "en-US",
+              "Store":"55363"			
+            }
+            }'
+             $Parameters = @{
+              Method = "POST"
+              Uri =  "https://dev.azure.com/subwaytechnology/Remote%20Order/_apis/pipelines/1646/runs?api-version=6.0-preview.1"
+              Body = ($Body) 
+              ContentType = "application/json"
+              Header = ($headers)
+              }
+              Invoke-RestMethod @Parameters
+              }
+          catch
+          {
+          Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+          Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+          exit 1
+          }
+          
+      env:
+        SYSTEM_ACCESSTOKEN: $(system.accesstoken) 
