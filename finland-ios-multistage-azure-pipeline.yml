@@ -1,0 +1,828 @@
+name: $(Rev:r)
+trigger:
+- none
+variables:
+  - group: EmailRecipients
+  - group: P12Password_Lowersandprod
+
+pool:
+  name: Azure Pipelines
+  vmImage: macOS-latest
+  demands:
+  - xcode
+
+stages:
+  - stage: 'Finland_WireMock'
+    displayName: 'Finland_WireMock'
+    jobs:
+    - job: Finland_WireMock
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-WIREMOCK-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_WireMock
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_WireMock.result, 'succeeded'), eq(dependencies.Finland_WireMock.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_WireMock.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_WireMock.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_WireMock.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_WireMock.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_WireMock.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+      
+  - stage: 'Finland_DEV'
+    displayName: 'Finland_DEV'
+    jobs:
+    - job: Finland_DEV
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-DEV-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_DEV
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_DEV.result, 'succeeded'), eq(dependencies.Finland_DEV.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_DEV.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_DEV.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_DEV.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_DEV.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_DEV.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_DEV1'
+    displayName: 'Finland_DEV1'
+    jobs:
+    - job: Finland_DEV1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-DEV1-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+
+    - job: SendEmail
+      dependsOn: Finland_DEV1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_DEV1.result, 'succeeded'), eq(dependencies.Finland_DEV1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_DEV1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_DEV1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_DEV1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_DEV1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_DEV1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_DEV2'
+    displayName: 'Finland_DEV2'
+    jobs:
+    - job: Finland_DEV2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-DEV2-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_DEV2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_DEV2.result, 'succeeded'), eq(dependencies.Finland_DEV2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_DEV2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_DEV2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_DEV2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_DEV2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_DEV2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_awsQE'
+    displayName: 'Finland_awsQE'
+    jobs:
+    - job: Finland_awsQE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-AWSQE-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            
+           
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_awsQE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_awsQE.result, 'succeeded'), eq(dependencies.Finland_awsQE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_awsQE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_awsQE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_awsQE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_awsQE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_awsQE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_QE'
+    displayName: 'Finland_QE'
+    jobs:
+    - job: Finland_QE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-QE-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_QE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_QE.result, 'succeeded'), eq(dependencies.Finland_QE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_QE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_QE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_QE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_QE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_QE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_QE1'
+    displayName: 'Finland_QE1'
+    jobs:
+    - job: Finland_QE1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-QE1-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_QE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_QE1.result, 'succeeded'), eq(dependencies.Finland_QE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_QE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_QE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_QE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_QE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_QE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_QE2'
+    displayName: 'Finland_QE2'
+    jobs:
+    - job: Finland_QE2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-QE2-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_QE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_QE2.result, 'succeeded'), eq(dependencies.Finland_QE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_QE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_QE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_QE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_QE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_QE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+        
+  - stage: 'Finland_CFAQE'
+    displayName: 'Finland_CFAQE'
+    jobs:
+    - job: Finland_CFAQE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAQE-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAQE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAQE.result, 'succeeded'), eq(dependencies.Finland_CFAQE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAQE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAQE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAQE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAQE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAQE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_CFAQE1'
+    displayName: 'Finland_CFAQE1'
+    jobs:
+    - job: Finland_CFAQE1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAQE1-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"          
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAQE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAQE1.result, 'succeeded'), eq(dependencies.Finland_CFAQE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAQE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAQE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAQE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAQE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAQE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_CFAQE2'
+    displayName: 'Finland_CFAQE2'
+    jobs:
+    - job: Finland_CFAQE2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAQE2-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAQE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAQE2.result, 'succeeded'), eq(dependencies.Finland_CFAQE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAQE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAQE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAQE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAQE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAQE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_awsPE'
+    displayName: 'Finland_awsPE'
+    jobs:
+    - job: Finland_awsPE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-AWSPE-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_awsPE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_awsPE.result, 'succeeded'), eq(dependencies.Finland_awsPE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_awsPE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_awsPE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_awsPE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_awsPE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_awsPE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_CFAPE'
+    displayName: 'Finland_CFAPE'
+    jobs:
+    - job: Finland_CFAPE
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAPE-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAPE
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAPE.result, 'succeeded'), eq(dependencies.Finland_CFAPE.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAPE.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAPE.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAPE.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAPE.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAPE.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_CFAPE1'
+    displayName: 'Finland_CFAPE1'
+    jobs:
+    - job: Finland_CFAPE1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAPE1-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAPE1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAPE1.result, 'succeeded'), eq(dependencies.Finland_CFAPE1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAPE1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAPE1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAPE1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAPE1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAPE1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_CFAPE2'
+    displayName: 'Finland_CFAPE2'
+    jobs:
+    - job: Finland_CFAPE2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAPE2-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAPE2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAPE2.result, 'succeeded'), eq(dependencies.Finland_CFAPE2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAPE2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAPE2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAPE2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAPE2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAPE2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_CFAUAT'
+    displayName: 'Finland_CFAUAT'
+    jobs:
+    - job: Finland_CFAUAT
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAUAT-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAUAT
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAUAT.result, 'succeeded'), eq(dependencies.Finland_CFAUAT.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAUAT.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAUAT.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAUAT.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAUAT.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAUAT.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_CFAUAT1'
+    displayName: 'Finland_CFAUAT1'
+    jobs:
+    - job: Finland_CFAUAT1
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAUAT1-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAUAT1
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAUAT1.result, 'succeeded'), eq(dependencies.Finland_CFAUAT1.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAUAT1.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAUAT1.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAUAT1.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+  - stage: 'Finland_CFAUAT2'
+    displayName: 'Finland_CFAUAT2'
+    jobs:
+    - job: Finland_CFAUAT2
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-CFAUAT2-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-non_prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: Finland_CFAUAT2
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+        condition: or(eq(dependencies.Finland_CFAUAT2.result, 'succeeded'), eq(dependencies.Finland_CFAUAT2.result, 'succeededWithIssues'))
+      variables:
+        AppVersion: $[ dependencies.Finland_CFAUAT2.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.Finland_CFAUAT2.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.Finland_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.Finland_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.Finland_CFAUAT2.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'IOS EMEA Finland'
+      steps:
+      - checkout: none
+      - template: devops_files/non-prod/send_email_template.yml
+
+
+  # - stage: 'PROD_Beta_CFAQE1'
+  #   displayName: 'PROD_Beta_CFAQE1'
+  #   jobs:
+  #   - job: PROD_Beta_buildandRelease
+  #     timeoutInMinutes: 0
+  #     cancelTimeoutInMinutes: 2
+  #     steps:
+  #       - template: EMEA_FINLAND/template/ios-finland-azure-Prod_Beta-template.yml
+        
+  - stage: 'FL_PROD'
+    displayName: 'FL_PROD'
+    jobs:
+    - job: FL_PROD
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-production-Finland-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/template/ios-azure-prod-FN-fastlane-template.yml
+        - powershell: |
+            echo "AppVersion from template: $(AppVersion)"
+            echo "BuildNumber from template: $(BuildNumber)"
+            echo "Firebase Download URL: $(FirebaseURL)"
+            echo "Firebase Console URL: $(FirebaseConsoleURL)"
+            echo "Firebase Release URL: $(FirebaseReleaseURL)"
+            echo "##vso[task.setvariable variable=AppVersion;isOutput=true]$(AppVersion)"
+            echo "##vso[task.setvariable variable=BuildNumber;isOutput=true]$(BuildNumber)"
+            echo "##vso[task.setvariable variable=FirebaseURL;isOutput=true]$(FirebaseURL)"
+            echo "##vso[task.setvariable variable=FirebaseConsoleURL;isOutput=true]$(FirebaseConsoleURL)"
+            echo "##vso[task.setvariable variable=FirebaseReleaseURL;isOutput=true]$(FirebaseReleaseURL)"
+          name: DisplayReleaseDetails
+    
+    - job: FINLAND_Sonarqube
+      pool:
+        name: Azure Pipelines
+        vmImage: macOS-15
+        demands:
+          - xcode 
+      displayName: 'Production_Sonarqube'
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+          - template: EMEA_FINLAND/variables/var-EMEA-sonarqube-flavor.yml
+      steps:
+          - template: EMEA_FINLAND/SonarQube/ios-sonarqube-template.yml
+          - powershell: |
+             echo "SonarQube URL from template: $(SonarQubeBranchURL)"
+             echo "##vso[task.setvariable variable=SonarQubeBranchURL;isOutput=true]$(SonarQubeBranchURL)"
+            name: DisplayReleaseDetails
+
+    - job: SendEmail
+      dependsOn: 
+        - FL_PROD
+        - FINLAND_Sonarqube
+      displayName: 'Send Email Notification'
+      pool:
+        name: SubwaycomOn-PremAgentPool
+      condition: |
+        and(
+          in(dependencies.FL_PROD.result, 'Succeeded', 'SucceededWithIssues'),
+          in(dependencies.FINLAND_Sonarqube.result, 'Succeeded', 'SucceededWithIssues', 'Failed')
+        )
+      variables:
+        AppVersion: $[ dependencies.FL_PROD.outputs['DisplayReleaseDetails.AppVersion'] ]
+        BuildNumber: $[ dependencies.FL_PROD.outputs['DisplayReleaseDetails.BuildNumber'] ]
+        FirebaseURL: $[ dependencies.FL_PROD.outputs['DisplayReleaseDetails.FirebaseURL'] ]
+        FirebaseConsoleURL: $[ dependencies.FL_PROD.outputs['DisplayReleaseDetails.FirebaseConsoleURL'] ]
+        FirebaseReleaseURL: $[ dependencies.FL_PROD.outputs['DisplayReleaseDetails.FirebaseReleaseURL'] ]
+        FirebaseAppDistribution: 'SUBWAY Finland Production'
+        SonarQubeBranchURL: $[ dependencies.FINLAND_Sonarqube.outputs['DisplayReleaseDetails.SonarQubeBranchURL'] ]
+      steps:
+      - checkout: none
+      - template: EMEA_FINLAND/template/Finland_PROD_send_email_template.yml
+
+
+
+  - stage: 'FL_Sonarqube'
+    displayName: 'FL_Sonarqube'
+    jobs:
+    - job: Sonarqube_Result
+      timeoutInMinutes: 0
+      cancelTimeoutInMinutes: 2
+      variables:
+        - template: EMEA_FINLAND/variables/var-EMEA-sonarqube-flavor.yml
+      steps:
+        - template: EMEA_FINLAND/SonarQube/ios-sonarqube-template.yml
+        - powershell: |
+             echo "SonarQube URL from template: $(SonarQubeBranchURL)"
+             echo "##vso[task.setvariable variable=SonarQubeBranchURL;isOutput=true]$(SonarQubeBranchURL)"
+          name: DisplayReleaseDetails
