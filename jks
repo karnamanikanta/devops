@@ -1,0 +1,42 @@
+C:\Program Files\Java\jdk-17\bin>keytool.exe -genkey -alias key0 -validity 9999 -keyalg RSA -keystore Subway_Kiosk_CAN_Signing
+Enter keystore password:
+Re-enter new password:
+What is your first and last name?
+[Unknown]: Subway
+What is the name of your organizational unit?
+[Unknown]: Doctor's Associates Inc
+What is the name of your organization?
+[Unknown]: Doctor's Associates Inc
+What is the name of your City or Locality?
+[Unknown]: Shelton
+What is the name of your State or Province?
+[Unknown]: CT
+What is the two-letter country code for this unit?
+[Unknown]: US
+Is CN=Subway, OU=Doctor's Associates Inc, O=Doctor's Associates Inc, L=Shelton, ST=CT, C=US correct?
+[no]: yes
+
+Generating 2,048 bit RSA key pair and self-signed certificate (SHA256withRSA) with a validity of 9,999 days
+for: CN=Subway, OU=Doctor's Associates Inc, O=Doctor's Associates Inc, L=Shelton, ST=CT, C=US
+
+C:\Program Files\Java\jdk-17\bin>keytool -importkeystore -srckeystore Subway_Kiosk_CAN_Signing -destkeystore Subway_Kiosk_CAN_Signing -deststoretype pkcs12
+Enter source keystore password:
+Entry for alias key0 successfully imported.
+Import command completed: 1 entries successfully imported, 0 entries failed or cancelled
+
+Warning:
+The original keystore "Subway_Kiosk_CAN_Signing" is backed up as "Subway_Kiosk_CAN_Signing.old"...
+
+C:\Program Files\Java\jdk-17\bin>keytool.exe -importkeystore -srckeystore .\Subway_Kiosk_CAN_Signing -destkeystore .\Subway_Kiosk_CAN_Signing.jks -deststoretype jks
+Importing keystore .\Subway_Kiosk_CAN_Signing to .\Subway_Kiosk_CAN_Signing.jks...
+Enter destination keystore password:
+Re-enter new password:
+Enter source keystore password:
+Entry for alias key0 successfully imported.
+Import command completed: 1 entries successfully imported, 0 entries failed or cancelled
+
+Warning:
+The JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using "keytool -importkeystore -srckeystore .\Subway_Kiosk_CAN_Signing.jks -destkeystore .\Subway_Kiosk_CAN_Signing.jks -deststoretype pkcs12".
+
+To See the content of JKS file.
+C:\Program Files\Java\jdk-17\bin>keytool -list -v -alias key0 -keystore ./Subway_Kiosk_CAN_Signing.jks
