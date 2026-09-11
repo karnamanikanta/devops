@@ -1,0 +1,179 @@
+    steps:
+    - task: InstallAppleCertificate@2
+      displayName: 'Install an Apple certificate'
+      inputs:
+        certSecureFile: 'Beta_App_Certificate.p12'
+        certPwd: '$(p12Password)'
+        keychain: 'temp'
+    - task: InstallAppleProvisioningProfile@1
+      displayName: 'Install AppStore_Applepay_Beta PF'
+      inputs:
+        provisioningProfileLocation: 'secureFiles'
+        provProfileSecureFile: 'AppStore_Applepay_Beta2509.mobileprovision'
+        removeProfile: false
+    - task: InstallAppleProvisioningProfile@1
+      displayName: 'Install AppStore_Applepay_Siriintent_Beta PF'
+      inputs:
+        provisioningProfileLocation: 'secureFiles'
+        provProfileSecureFile: 'AppStore_Applepay_Siriintent_Beta2509.mobileprovision'
+        removeProfile: false
+    - task: InstallAppleProvisioningProfile@1
+      displayName: 'Install AppStore_Applepay_Siriintentui_Beta PF'
+      inputs:
+        provisioningProfileLocation: 'secureFiles'
+        provProfileSecureFile: 'AppStore_Applepay_Siriintentui_Beta2509.mobileprovision'
+        removeProfile: false
+    - task: InstallAppleProvisioningProfile@1
+      displayName: 'Install AppStore_ApplePay_RichNotification_Beta PF'
+      inputs:
+        provisioningProfileLocation: 'secureFiles'
+        provProfileSecureFile: 'AppStore_ApplePay_RichNotification_Beta2509.mobileprovision'
+        removeProfile: false
+
+    - task: Bash@3
+      displayName: 'Set Build Number'
+      inputs:
+        filePath: 'Subway/cicd/NA/devops_files/Prod_Beta/SetBuildNumber.sh'
+
+    - task: DownloadSecureFile@1
+      name: ack
+      displayName: 'Download ack'
+      inputs:
+         secureFile: 'f4fae07d-52a2-4c45-b79d-0046f24599b4'
+
+    - script: |
+        mkdir -p $(Agent.TempDirectory)/$(wizCliUniquePath)
+      displayName: 'Create wizCli Directory'
+
+    - task: wiz@0
+      displayName: 'Wiz Directory Scan'
+      inputs:
+        command: 'dir'
+        clientid: '$(WIZ-CLIENT-ID)'
+        secret: '$(WIZ-CLIENT-SECRET-KEY)'
+        path: '.'
+        policyHitsOnly: true
+        fileHashesScan: true
+        project: '95fd77e4-988f-5b37-8491-179b6e271b1e'
+        sensitiveData: true
+        wizCliPath: '$(Agent.TempDirectory)/$(wizCliUniquePath)'
+
+    - task: DownloadSecureFile@1
+      name: downloadFirebasecredentials
+      displayName: 'Download Firebase Credentials'
+      inputs:
+        secureFile: '49f11de0-994c-4e78-822f-7263ec835e6b'
+
+    # - task: Bash@3
+    #   displayName: 'Install XCODE Version'
+    #   inputs:
+    #     targetType: 'inline'
+    #     script: |
+    #       sudo xcode-select --switch /Applications/Xcode_15.2.app
+
+    - task: Bash@3
+      displayName: 'Fastlane gym Xcode Build'
+      inputs:
+        targetType: 'inline'
+        script: |
+          set -e
+          cp $(ack.secureFilePath) $SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/cicd/NA/devops_files/Prod_Beta
+          cd $SYSTEM_DEFAULTWORKINGDIRECTORY/Subway
+          bundle install
+          export FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=600
+          export FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6
+          # Get version from Info.plist (for iOS version)
+          INFO_PLIST_FILE=$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA-Info.plist
+          function getPlistProperty {
+            PROP_KEY=$1
+            PROP_VALUE=$(defaults read $INFO_PLIST_FILE $PROP_KEY)
+            echo "$PROP_VALUE"
+          }
+          GetAppVersion=$(getPlistProperty "CFBundleShortVersionString")
+          echo "GetAppVersion=$GetAppVersion"
+          echo "##vso[task.setvariable variable=AppVersion;]$GetAppVersion"
+          GetBuildNumber=$(getPlistProperty "CFBundleVersion")
+          echo "GetBuildNumber=$GetBuildNumber"
+          echo "##vso[task.setvariable variable=BuildNumber;]$GetBuildNumber"
+          GetFileNamePath="$(downloadFirebasecredentials.secureFilePath)"
+          # Get file directory and name
+          GetFileDirectory=$(dirname "$GetFileNamePath")
+          GetFileName=$(basename "$GetFileNamePath")
+          # Print file directory and name
+          echo "$GetFileDirectory"
+          echo "$GetFileName"
+          export SECUREFILEPATH="$GetFileDirectory/$GetFileName"
+
+          set +e
+          echo "Running Fastlane for variant: $(BuildVariant)"
+          ./bin/bundle exec fastlane NA_PRODBetaCFAQE2 2>&1 | tee fastlane_output.log
+          FASTLANE_EXIT_CODE=$?
+          set -e
+ 
+          BUILD_OUTPUT=$(cat fastlane_output.log)
+          echo "$BUILD_OUTPUT"
+          # Extract the Firebase app binary download URL from Fastlane output
+          FIREBASE_URL=$(echo "$BUILD_OUTPUT" | grep -o 'https://firebaseappdistribution.googleapis.com/[^ ]*')
+          echo "Firebase Download URL: $FIREBASE_URL"
+          echo "##vso[task.setvariable variable=FirebaseURL;]$FIREBASE_URL"
+          # Extract Firebase Console URL
+          FIREBASE_CONSOLE_URL=$(echo "$BUILD_OUTPUT" | grep -o 'https://console.firebase.google.com/project/[^ ]*')
+          echo "Firebase Console URL: $FIREBASE_CONSOLE_URL"     
+          echo "##vso[task.setvariable variable=FirebaseConsoleURL;]$FIREBASE_CONSOLE_URL"
+          # Extract the URL for sharing the release with testers from the fastlane output
+          FIREBASE_RELEASE_URL=$(echo "$BUILD_OUTPUT" | grep -o 'https://appdistribution.firebase.google.com/testerapps/[^ ]*')
+          echo "Firebase Release URL: $FIREBASE_RELEASE_URL"
+          echo "##vso[task.setvariable variable=FirebaseReleaseURL;]$FIREBASE_RELEASE_URL"
+          IPA_PATH=$(echo "$BUILD_OUTPUT" | grep "IPArenamedto:" | sed 's/.*IPArenamedto: *//' | tr -d '[:space:]')
+          echo "##vso[task.setvariable variable=IpaPath]$IPA_PATH"
+          echo "IPA File Path: $IPA_PATH"
+          # DSYM_PATH=$(echo "$BUILD_OUTPUT" | grep -o '"/Users/runner/work/.*dSYMs"' | tr -d '"')
+          # echo "##vso[task.setvariable variable=DSYMPath]$DSYM_PATH"
+          # echo "DSYM File Path: $DSYM_PATH"
+        continueOnError: false
+
+  
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: drop'
+      inputs:      
+        PathtoPublish: '$(IpaPath)'
+
+    # - task: PublishBuildArtifacts@1
+    #   displayName: 'Publish Artifact: drop'
+    #   inputs:      
+    #     PathtoPublish: '$(DSYMPath)'
+
+    # - task: CopyFiles@2
+    #   displayName: 'Copy .ipa Files to: $(build.artifactStagingDirectory)'
+    #   inputs:
+    #     Contents: '**/*.ipa'
+    #     TargetFolder: '$(build.artifactStagingDirectory)'
+
+    # - task: CopyFiles@2
+    #   displayName: 'Copy dSYM Files to: $(build.artifactStagingDirectory)'
+    #   inputs: 
+    #     Contents: '**/*.dSYM.zip' 
+    #     TargetFolder: '$(build.artifactStagingDirectory)'
+
+    # - task: PublishBuildArtifacts@1
+    #   displayName: 'Publish Artifact: drop'
+    #   inputs:      
+    #    PathtoPublish: '$(system.defaultworkingdirectory)/Subway/build/*/'
+
+
+    #- task: CopyFiles@2
+    #  displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+    #  inputs:
+    #     SourceFolder: '$(system.defaultworkingdirectory)'
+    #     Contents: 'error-logs'
+    #     TargetFolder: '$(build.artifactstagingdirectory)'
+    #     condition: succeededOrFailed() 
+  
+  
+    #- task: PublishBuildArtifacts@1
+    #  displayName: 'Publish CFA QE2.log'
+    #  inputs:
+    #     PathtoPublish: '/Users/runner/Library/Logs/gym/SUBWAY®-CFA QE2.log'
+    #     ArtifactName: 'CFA QE2.log'
+
+
