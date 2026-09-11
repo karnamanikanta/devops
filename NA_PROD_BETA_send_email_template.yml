@@ -1,0 +1,56 @@
+ steps:
+   - task: PowerShell@2
+     displayName: 'Sending Email Notification with Release Details'
+     inputs:
+      targetType: 'inline'
+      script: |
+         # SMTP Server Configuration
+         $smtpServer = "phl.smtp.subwaydai.com"
+         $smtpPort = 25
+         $fromAddress = "noreply@subway.com"
+
+         # Fetch the To and CC addresses from pipeline variables
+         $toAddress = $env:EmailTo -split ","
+         $ccAddress = $env:EmailCC -split ","
+
+         $emailBodyFile = New-TemporaryFile
+         $emailBody = @"
+         Hi Team,<br>
+         Below are the release details for <strong><em> $($env:System_StageName) </em></strong> builds for Analytics/DIT.<br>
+         <table border="1">
+           <tr>
+             <th colspan="2" style="color: white; background-color: #00008B;"><strong>iOS Release Details</strong></th>
+           </tr>
+           <tr><td><strong>Release Date</strong></td><td>$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")</td></tr>
+           <tr><td><strong>Source Branch Name</strong></td><td>$(Build.SourceBranch)</td></tr>
+           <tr><td><strong>Build Schema</strong></td><td>$($env:System_StageName)</td></tr>
+           <tr><td><strong>ADO Pipeline Name</strong></td><td>$($env:System_DefinitionName)</td></tr>
+           <tr><td><strong>App Version Number</strong></td><td>$(AppVersion)</td></tr>
+           <tr><td><strong>Build Number</strong></td><td>$(BuildNumber)</td></tr>
+           <tr><td><strong>Firebase Download URL(Expires in one hour)</strong></td><td><a href="$(FirebaseURL)">$(FirebaseURL)</a></td></tr>
+           <tr><td><strong>Firebase Release URL</strong></td><td><a href="$(FirebaseReleaseURL)">$(FirebaseReleaseURL)</a></td></tr>
+           <tr><td><strong>Firebase Console URL</strong></td><td><a href="$(FirebaseConsoleURL)">$(FirebaseConsoleURL)</a></td></tr>
+           <tr><td><strong>Build URL</td></strong></td><td>$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)</td>
+           <tr><td><strong>Source Branch Name</strong></td><td>$(Build.SourceBranch)</td></tr>
+           <tr><td><strong>Test Flight URL</strong></td><td><a href="https://appstoreconnect.apple.com/teams/69a6de77-da94-47e3-e053-5b8c7c11a4d1/apps/1492316881/testflight/ios">Test Flight Link</a></td></tr>
+           <tr><td><strong>SonarQube URL</strong></td><td><a href="$($env:SonarQubeBranchURL)">$($env:SonarQubeBranchURL)</a></td></tr>
+         </table>
+         <br>
+         The deployment was completed <strong><em>successfully</em></strong> on <strong><em>$(Get-Date -Format "dd-MM-yyyy")</em></strong><br>
+         <br>
+         <br>
+         <strong>Regards,<strong><br>
+         <strong><em>DevOps Team</em></strong><br>
+         "@
+         $emailBody | Out-File -FilePath $emailBodyFile.FullName -Encoding utf8
+
+         Try {
+             Send-MailMessage -From $fromAddress -To $toAddress -Cc $ccAddress -Subject "Build Notification : iOS $($env:System_StageName) AppVersion : $(AppVersion)($(BuildNumber))" -Body (Get-Content $emailBodyFile.FullName -Raw) -BodyAsHtml -SmtpServer $smtpServer -Port $smtpPort
+             Write-Host "Release details email sent successfully."
+         } Catch {
+             Write-Error "Failed to send release details email: $($_.Exception.Message)"
+             exit 1
+         }
+
+         # Remove temporary file
+         Remove-Item $emailBodyFile.FullName
