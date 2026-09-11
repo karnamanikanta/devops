@@ -1,0 +1,159 @@
+3/27/26, 3:46 PM
+Kiosk Android Gated Pipeline – Technical Documentation (Detailed)
+Kiosk Android Gated Pipeline – Technical 
+Documentation (Detailed)
+Kiosk Android Gated Pipeline – Technical Documentation
+1. Purpose and Scope
+This document provides a technical deep‑dive of the Azure DevOps YAML pipeline defined in 
+gated-pipeline-kiosk.txt 
+. 
+The pipeline acts as a gated quality control mechanism for the Android Kiosk (NA) application by enforcing Pull Request 
+governance, executing unit tests with coverage, and validating code quality using SonarQube before changes are allowed to 
+progress.
+This pipeline is not a release pipeline. Its sole purpose is pre‑merge validation and quality enforcement.
+2. Pipeline Execution Model
+Trigger Behavior
+1 trigger: none
+2
+• 
+The pipeline does not run automatically on code pushes
+• 
+Intended to be executed as:
+• 
+PR validation pipeline
+• 
+Manually queued gated build
+This prevents unnecessary resource usage and ensures execution only when explicitly required.
+YAML
+3. Build Infrastructure
+Component
+1
+2
+3
+4
+Agent Pool
+Configuration
+Azure Pipelines
+macOS agents are required to ensure compatibility with Android tooling and Gradle tasks.
+4. High‑Level Pipeline Architecture
+https://loop.cloud.microsoft/print/eyJwIjp7InUiOiJodHRwczovL2Z3aC5zaGFyZXBvaW50LmNvbS86Zmw6L3IvY29udGVudHN0b3JhZ2UveDhGTk…
+1/3
+3/27/26, 3:46 PM
+Kiosk Android Gated Pipeline – Technical Documentation (Detailed)
+1 PR Validation
+2
+   │
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+   ├── Mandatory Checklist Enforcement
+   │
+   ├── SonarQube Configuration
+   │
+   ├── Gradle Unit Tests + Coverage
+   │
+   ├── SonarQube Quality Gate Evaluation
+   │
+   │
+   ├── Custom UTC Failure Threshold Validation
+   └── Build Warning Threshold Enforcement
+Each stage is fail‑fast—any failure immediately terminates the pipeline.
+YAML
+5. Pull Request Mandatory Checklist Enforcement
+Task
+1 PowerShell@2
+2
+Objective
+Ensure all pull requests strictly comply with defined engineering and governance standards.
+Technical Workflow
+1
+2
+3
+. Fetches PR metadata using Azure DevOps REST APIs
+. Extracts PR description
+. Validates:
+• 
+Description is not empty
+• 
+Mandatory checklist items exist
+• 
+All mandatory items are checked (
+Enforced Checklist Items
+• 
+PR title format compliance
+• 
+Linked work items (PBI / Bug / Task)
+• 
+Physical device or emulator testing
+• 
+Accessibility (ADA) considerations
+[x] 
+)
+• 
+Adherence to development best practices
+• 
+Code documentation quality
+• 
+Passing unit tests
+• 
+UI change evidence (screenshots / GIFs)
+• 
+No hardcoded values
+Failure Behavior
+• 
+Missing checklist 
+➜
+ Fail build
+YAML
+2/3
+https://loop.cloud.microsoft/print/eyJwIjp7InUiOiJodHRwczovL2Z3aC5zaGFyZXBvaW50LmNvbS86Zmw6L3IvY29udGVudHN0b3JhZ2UveDhGTk…
+3/27/26, 3:46 PM
+Kiosk Android Gated Pipeline – Technical Documentation (Detailed)
+• 
+Unchecked checklist item 
+➜
+ Fail build
+This step establishes PR‑level governance before any technical validation begins.
+6. SonarQube Analysis Preparation
+Task
+1 SonarQubePrepare@7
+2
+Configuration Details
+Property Value
+YAML
+1
+2
+3
+SonarQube Instance
+sonarqube-subway-mob-android
+Inputs and Reports
+Source Path: src/main/javaCoverage Strategy
+The pipeline defines an extensive exclusion list to remove:
+• 
+Generated Android framework code
+• 
+Data binding artifacts
+• 
+Dependency injection scaffolding
+• 
+UI‑only components
+• 
+DTOs and platform service models
+• 
+Test Path: 
+src/test/java
+• 
+JUnit XML Reports
+• 
+JaCoCo XML Coverage Reports
+3/3
+https://loop.cloud.microsoft/print/eyJwIjp7InUiOiJodHRwczovL2Z3aC5zaGFyZXBvaW50LmNvbS86Zmw6L3IvY29udGVudHN0b3JhZ2UveDhGTk…
