@@ -1,0 +1,805 @@
+name: $(Rev:r)
+variables:
+    - group: EmailRecipients
+    - group: P12Password_Lowersandprod
+    - template: NA/variables/var-CFAUAT-NA-flavor.yml
+resources:
+  repositories:
+    - repository: goldsuite
+      type: git
+      name: QE.UI.Automation.Digital.CICD
+      ref: refs/heads/main
+
+pool:
+   name: Azure Pipelines
+   vmImage: macOS-15
+   demands:
+     - xcode
+
+stages:
+- stage: Subway_IOS_NA_GatedBuild
+  jobs:
+  - job: UAT_BuildAndRelease_GatedBuild
+    timeoutInMinutes: 0
+    cancelTimeoutInMinutes: 2
+    steps:
+    - task: PowerShell@2
+      displayName: 'Pull Request Mandatory Checks'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $ErrorActionPreference = "Stop"
+          $Error.Clear()
+          
+          Try {
+              # Get system access token
+              $Token = $env:SYSTEM_ACCESSTOKEN
+              $headers = @{Authorization = "Bearer $Token"}
+              
+              # Get PR ID dynamically from build variables
+              $prId = $env:SYSTEM_PULLREQUEST_PULLREQUESTID
+              
+              # Construct PR URL dynamically
+              $organization = "subwaytechnology"
+              $project = "Guest-MobileApps"
+              $Pullrequrl = "https://dev.azure.com/$organization/$project/_apis/git/pullrequests/$prId`?api-version=6.0"
+              
+              # Get PR details
+              $pullreqResponse = Invoke-RestMethod -Method Get -Uri $Pullrequrl -Headers $headers
+              $prDescription = $pullreqResponse.description
+
+              if ([string]::IsNullOrEmpty($prDescription)) {
+                  Write-Host "PR Description is empty!"
+                  exit 1  # Fail the build if description is empty
+              } else {
+                  Write-Host "PR Description is provided."
+              }
+              
+              # Define mandatory checkboxes that must be checked
+              $mandatoryCheckboxes = @(
+                  "I have added unit tests to cover my changes, if applicable.",
+                  "All existing tests pass.",
+                  "Code follows the style guidelines and best practices.",
+                  "Make sure no hardcoded values in the pull request code",
+                  "Does the PR title follow the correct format?",
+                  "Is the PR linked to the relevant PBI, BUG, Code Review Task, or Unit Testing Task?",
+                  "Has this pull request been tested on a physical device and/or emulator?",
+                  "Does the implementation follow [best practices](https://subwaytechnology.visualstudio.com/Guest-MobileApps/_wiki/wikis/Guest-MobileApps.wiki/7275/Best-Practices-for-Developers)?",
+                  "Is the code well-documented and easy to understand?",
+                  "Do all existing Unit Tests pass?",
+                  "If there are UI changes, have before and after screenshots/Gif been added?"
+              )
+              
+              # # Define recommended checkboxes that should be reviewed
+               $recommendedCheckboxes = @(
+                   "Bug fix (non-breaking change which fixes an issue)",
+                   "New feature (non-breaking change which adds functionality)",
+                   "Breaking change (fix or feature that would cause existing functionality to not work as expected)",
+                   "UI Polish (improve the appearance and usability of the interface without altering its functionality)",
+                   "Refactoring (improve the quality or maintainability of the code without changing any functionality)",
+                   "Localization (support a new language or improve the translation of an existing language)",
+                   "Tech Debt (change made to address technical debt or to improve the overall quality)",
+                   "I have added Adobe Analytics to cover my changes, if applicable.",
+                   "North America",
+                   "FINLAND",
+                   "TUKI",
+                   "GERMANY",
+                   " Code is well-documented and easy to understand.",
+                   "Accessibility changes made in this pull request."
+                )    
+              
+              $hasErrors = $false
+              
+              Write-Host "##[section]Checking Mandatory Items..."
+              # Check mandatory checkboxes
+              foreach ($checkbox in $mandatoryCheckboxes) {
+                  $checkboxPattern = "- \[ \] $checkbox"  # Unchecked pattern
+                  $checkedPattern = "- \[x\] $checkbox"   # Checked pattern
+
+              # Special handling for checkboxes containing URLs
+              if ($checkbox -match "\[(.*?)\]\((https?:\/\/[^\s]+)\)") {
+                  $checkboxPattern = "- \[\s\] .*?\[(.*?)\]\((https?:\/\/[^\s]+)\).*"
+                  $checkedPattern = "- \[x\] .*?\[(.*?)\]\((https?:\/\/[^\s]+)\).*"
+              }                  
+                  
+                  if ($prDescription -match $checkboxPattern) {
+                      Write-Host "##vso[task.logissue type=error]Mandatory checkbox '$checkbox' is not checked."
+                      $hasErrors = $true
+                  }
+                  elseif (!($prDescription -match $checkedPattern)) {
+                      Write-Host "##vso[task.logissue type=error]Mandatory checkbox '$checkbox' is missing from PR description."
+                      $hasErrors = $true
+                  }
+              }
+              
+              # Write-Host "##[section]Checking Recommended Items..."
+              # # Check recommended checkboxes and provide warnings
+              # foreach ($checkbox in $recommendedCheckboxes) {
+              #     $checkboxPattern = "- \[ \] $checkbox"  # Unchecked pattern
+              #     $checkedPattern = "- \[x\] $checkbox"   # Checked pattern
+                  
+              #     if ($prDescription -match $checkboxPattern) {
+              #         Write-Host "##vso[task.logissue type=warning]Recommended checkbox '$checkbox' is not checked."
+              #     }
+              #     elseif (!($prDescription -match $checkedPattern)) {
+              #         Write-Host "##vso[task.logissue type=warning]Recommended checkbox '$checkbox' is missing from PR description."
+              #     }
+              # }
+              
+              if ($hasErrors) {
+                  Write-Host "##vso[task.complete result=Failed;]"
+                  Write-Error "One or more mandatory checkboxes are not checked. Please review and update your PR description."
+                  exit 1
+              }
+              
+              Write-Host "##[section]All mandatory checkboxes are properly checked."
+          }
+          catch {
+              Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+              Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+              exit 1
+          }
+      env:
+        SYSTEM_ACCESSTOKEN: $(system.accesstoken)
+
+    # - task: Bash@3
+    #   displayName: 'Pull Request Mandatory Checks'
+    #   inputs:
+    #     targetType: 'inline'
+    #     script: |
+    #       #!/bin/bash
+    #       set -e  # Exit on any error
+          
+    #       # Debug information
+    #       echo "Shell: $SHELL"
+    #       echo "OS: $(uname -s)"
+    #       echo "Architecture: $(uname -m)"
+          
+    #       # Function to log errors
+    #       log_error() {
+    #           echo "##vso[task.logissue type=error]$1"
+    #       }
+          
+    #       # Function to log sections
+    #       log_section() {
+    #           echo "##[section]$1"
+    #       }
+          
+    #       # Check if we have the required token
+    #       if [ -z "$SYSTEM_ACCESSTOKEN" ]; then
+    #           log_error "SYSTEM_ACCESSTOKEN is not available"
+    #           exit 1
+    #       fi
+          
+    #       # Get PR ID from environment variables
+    #       PR_ID="$SYSTEM_PULLREQUEST_PULLREQUESTID"
+          
+    #       if [ -z "$PR_ID" ]; then
+    #           echo "No PR ID found - this might not be a PR build"
+    #           exit 0  # Exit successfully for non-PR builds
+    #       fi
+          
+    #       # Construct PR URL
+    #       ORGANIZATION="subwaytechnology"
+    #       PROJECT="Guest-MobileApps"
+    #       PR_URL="https://dev.azure.com/$ORGANIZATION/$PROJECT/_apis/git/pullrequests/$PR_ID?api-version=6.0"
+          
+    #       echo "PR URL: $PR_URL"
+          
+    #       # Get PR details using curl
+    #       PR_RESPONSE=$(curl -s -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" \
+    #                         -H "Content-Type: application/json" \
+    #                         "$PR_URL")
+          
+    #       # Check if curl was successful
+    #       if [ $? -ne 0 ]; then
+    #           log_error "Failed to fetch PR details from Azure DevOps API"
+    #           exit 1
+    #       fi
+          
+    #       # Extract PR description using jq (if available) or grep/sed
+    #       if command -v jq &> /dev/null; then
+    #           PR_DESCRIPTION=$(echo "$PR_RESPONSE" | jq -r '.description // empty')
+    #       else
+    #           # Fallback to grep/sed if jq is not available
+    #           PR_DESCRIPTION=$(echo "$PR_RESPONSE" | grep -o '"description":"[^"]*"' | sed 's/"description":"//; s/"$//')
+    #       fi
+          
+    #       # Check if PR description is empty
+    #       if [ -z "$PR_DESCRIPTION" ] || [ "$PR_DESCRIPTION" = "null" ]; then
+    #           echo "PR Description is empty!"
+    #           exit 1
+    #       else
+    #           echo "PR Description is provided."
+    #       fi
+          
+    #       # Define mandatory checkboxes array
+    #       declare -a MANDATORY_CHECKBOXES=(
+    #           "I have added unit tests to cover my changes, if applicable."
+    #           "All existing tests pass."
+    #           "This pull request has been tested on a physical device and/or emulator."
+    #           "Code follows the style guidelines and best practices."
+    #           "Make sure no hardcoded values in the pull request code."
+    #           "Does the PR title follow the correct format?"
+    #           "Is the PR linked to the relevant PBI, BUG, Code Review Task, or Unit Testing Task?"
+    #           "Has this pull request been tested on a physical device and/or emulator?"
+    #           "Does the implementation follow [best practices](https://subwaytechnology.visualstudio.com/Guest-MobileApps/_wiki/wikis/Guest-MobileApps.wiki/7275/Best-Practices-for-Developers)?"
+    #           "Is the code well-documented and easy to understand?"
+    #           "Do all existing Unit Tests pass?"
+    #           "If there are UI changes, have before and after screenshots/Gif been added?"
+    #           "Make sure no hardcoded values in the pull request code"
+    #       )
+          
+    #       # Define recommended checkboxes array
+    #       declare -a RECOMMENDED_CHECKBOXES=(
+    #           "Bug fix (non-breaking change which fixes an issue)"
+    #           "New feature (non-breaking change which adds functionality)"
+    #           "Breaking change (fix or feature that would cause existing functionality to not work as expected)"
+    #           "UI Polish (improve the appearance and usability of the interface without altering its functionality)"
+    #           "Refactoring (improve the quality or maintainability of the code without changing any functionality)"
+    #           "Localization (support a new language or improve the translation of an existing language)"
+    #           "Tech Debt (change made to address technical debt or to improve the overall quality)"
+    #           "I have added Adobe Analytics to cover my changes, if applicable."
+    #           "North America"
+    #           "FINLAND"
+    #           "TUKI"
+    #           "GERMANY"
+    #           "Code is well-documented and easy to understand."
+    #           "Accessibility changes made in this pull request."
+    #       )
+          
+    #       HAS_ERRORS=false
+          
+    #       log_section "Checking Mandatory Items..."
+          
+    #       # Function to escape special regex characters
+    #       escape_regex() {
+    #           echo "$1" | sed 's/[[\.*^$()+?{|]/\\&/g'
+    #       }
+          
+    #       # Check each mandatory checkbox
+    #       for checkbox in "${MANDATORY_CHECKBOXES[@]}"; do
+    #           # Escape special characters for regex
+    #           escaped_checkbox=$(escape_regex "$checkbox")
+              
+    #           # Check for unchecked pattern: - [ ] checkbox_text
+    #           unchecked_pattern="- \[ \] $escaped_checkbox"
+    #           # Check for checked pattern: - [x] checkbox_text
+    #           checked_pattern="- \[x\] $escaped_checkbox"
+              
+    #           # Special handling for checkboxes containing URLs
+    #           if echo "$checkbox" | grep -q '\[.*\](https\?://[^)]*)']; then
+    #               # For URL containing checkboxes, use more flexible patterns
+    #               unchecked_pattern="- \[\s*\].*$escaped_checkbox"
+    #               checked_pattern="- \[x\].*$escaped_checkbox"
+    #           fi
+              
+    #           # Check if checkbox is unchecked (present but not marked)
+    #           if echo "$PR_DESCRIPTION" | grep -q "$unchecked_pattern"; then
+    #               log_error "Mandatory checkbox '$checkbox' is not checked."
+    #               HAS_ERRORS=true
+    #           # Check if checkbox is missing entirely
+    #           elif ! echo "$PR_DESCRIPTION" | grep -q "$checked_pattern"; then
+    #               log_error "Mandatory checkbox '$checkbox' is missing from PR description."
+    #               HAS_ERRORS=true
+    #           fi
+    #       done
+          
+    #       # Uncomment below section if you want to check recommended items
+    #       # log_section "Checking Recommended Items..."
+    #       # for checkbox in "${RECOMMENDED_CHECKBOXES[@]}"; do
+    #       #     # Escape special characters for regex
+    #       #     escaped_checkbox=$(escape_regex "$checkbox")
+    #       #
+    #       #     # Check for unchecked pattern: - [ ] checkbox_text
+    #       #     unchecked_pattern="- \[ \] $escaped_checkbox"
+    #       #     # Check for checked pattern: - [x] checkbox_text
+    #       #     checked_pattern="- \[x\] $escaped_checkbox"
+    #       #
+    #       #     # Check if checkbox is unchecked (present but not marked)
+    #       #     if echo "$PR_DESCRIPTION" | grep -q "$unchecked_pattern"; then
+    #       #         echo "##vso[task.logissue type=warning]Recommended checkbox '$checkbox' is not checked."
+    #       #     # Check if checkbox is missing entirely
+    #       #     elif ! echo "$PR_DESCRIPTION" | grep -q "$checked_pattern"; then
+    #       #         echo "##vso[task.logissue type=warning]Recommended checkbox '$checkbox' is missing from PR description."
+    #       #     fi
+    #       # done
+          
+    #       # Final result
+    #       if [ "$HAS_ERRORS" = true ]; then
+    #           echo "##vso[task.complete result=Failed;]"
+    #           log_error "One or more mandatory checkboxes are not checked. Please review and update your PR description."
+    #           exit 1
+    #       fi
+          
+    #       log_section "All mandatory checkboxes are properly checked."
+    #   env:
+    #     SYSTEM_ACCESSTOKEN: $(system.accesstoken)
+
+    - task: InstallAppleCertificate@2
+      displayName: 'Install an Apple certificate'
+      inputs:
+        certSecureFile: 'Lowers_Certificates.p12'
+        certPwd: '$(NonProd_p12password)'
+
+    - task: InstallAppleProvisioningProfile@1
+      displayName: 'Install sandboxmobile_richnotification PF'
+      inputs:
+        provisioningProfileLocation: 'secureFiles'
+        provProfileSecureFile: 'comsubwaysandboxmobilerichnotification_03022027.mobileprovision'
+
+    - task: InstallAppleProvisioningProfile@1
+      displayName: 'Install sandboxmobile_match_InHouse PF'
+      inputs:
+        provisioningProfileLocation: 'secureFiles'
+        provProfileSecureFile: 'match_InHouse_comsubwaysandboxmobile_03022027.mobileprovision'
+
+    - task: InstallAppleProvisioningProfile@1
+      displayName: 'Install sandboxmobile_siriintent PF'
+      inputs:
+        provisioningProfileLocation: 'secureFiles'
+        provProfileSecureFile: 'sandbox_comsubwaysandboxmobilesiriintent_03022027.mobileprovision'
+
+    - task: InstallAppleProvisioningProfile@1
+      displayName: 'Install sandboxmobile_siriintentui PF'
+      inputs:
+        provisioningProfileLocation: 'secureFiles'
+        provProfileSecureFile: 'sandbox_comsubwaysandboxmobilesiriintentui_03022027.mobileprovision'
+
+    - task: DownloadSecureFile@1
+      name: downloadFirebasecredentials
+      displayName: 'Download Firebase Credentials'
+      inputs:
+        secureFile: '49f11de0-994c-4e78-822f-7263ec835e6b'
+
+
+    - task: Bash@3
+      displayName: 'Set build number and Generate Podfile.lock hash'
+      name: buildnumber
+      inputs:
+        targetType: 'inline'
+        script: |
+          PODFILE_LOCK_HASH=$(shasum -a 256 $(Build.SourcesDirectory)/Subway/Podfile.lock | awk '{print $1}')
+          echo "##vso[task.setvariable variable=PODFILE_LOCK_HASH]$PODFILE_LOCK_HASH"
+          echo "podfile.lock hash $PODFILE_LOCK_HASH"
+          Ver_String="$(defaults read $SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA-Info CFBundleShortVersionString)"
+          echo "Version_String=$Ver_String"
+          Build_Number_FromFile="$(defaults read $SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA-Info CFBundleVersion)"
+          Number="$BUILD_BUILDNUMBER"
+          Updated_Build_Number=$(($Build_Number_FromFile + $Number))
+          echo "Updated_build_number=$Updated_Build_Number"
+          echo "##vso[task.setvariable variable=UPDATED_BUILD_NUMBER;isOutput=true]$Updated_Build_Number"
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA-Info.plist" $Updated_Build_Number
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/Source/NA QE1-Info.plist" $Updated_Build_Number
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/SiriIntent/Info.plist" $Updated_Build_Number
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/SiriIntentUI/Info.plist" $Updated_Build_Number
+          ruby $SYSTEM_DEFAULTWORKINGDIRECTORY/setBuildNumber.rb "$SYSTEM_DEFAULTWORKINGDIRECTORY/Subway/RichNotification/Info.plist" $Updated_Build_Number
+
+    - task: Cache@2
+      displayName: 'Cache CocoaPods dependencies'
+      inputs:
+        key: 'goldsuitepods | "$(Agent.OS)" | $(PODFILE_LOCK_HASH)'
+        path: '$(Build.SourcesDirectory)/Subway/Pods'
+        cacheHitVar: 'PODS_CACHE_RESTORED'
+
+    - task: PowerShell@2
+      enabled: true
+      displayName: 'PFs override'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $GetFilePath="$Env:BUILD_SOURCESDIRECTORY\Subway\Subway.xcodeproj\project.pbxproj"
+          (Get-Content $GetFilePath).replace('Development RichNotification', 'com.subway.sandbox.mobile.richnotification') | Set-Content $GetFilePath -Force
+          (Get-Content $GetFilePath).replace('Development com.subway.sandbox.siriintentui', 'sandbox com.subway.sandbox.mobile.siriintentui') | Set-Content $GetFilePath -Force
+          (Get-Content $GetFilePath).replace('Development com.subway.sandbox.mobile', 'match InHouse com.subway.sandbox.mobile') | Set-Content $GetFilePath -Force
+          (Get-Content $GetFilePath).replace('Development com.subway.sandbox.siriintent', 'sandbox com.subway.sandbox.mobile.siriintent') | Set-Content $GetFilePath -Force
+
+    - task: Bash@3
+      enabled: true
+      displayName: 'Fastlane gym Xcode Build'
+      name: relapp
+      inputs:
+        targetType: 'inline'
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          cd $SYSTEM_DEFAULTWORKINGDIRECTORY/Subway
+          
+          # ----- CONFIG -----
+          BUNDLER_VERSION="${BUNDLER_VERSION:-2.4.22}"   # Fastlane requires Bundler 2.x
+          echo "Ruby info:"
+          which ruby || true
+          ruby -v || true
+
+          echo "Ensuring Bundler ${BUNDLER_VERSION} is installed (we will NOT use the global shim)..."
+          gem uninstall -aIx bundler || true
+          gem install bundler -v "${BUNDLER_VERSION}"
+
+          # Create a project-local Bundler wrapper
+          mkdir -p ./bin
+          cat > ./bin/bundle <<'RUBY_WRAPPER'
+          #!/usr/bin/env ruby
+          require 'rubygems'
+          FORCED_VERSION = ENV.fetch('FORCED_BUNDLER_VERSION')
+          gem 'bundler', "= #{FORCED_VERSION}"
+          load Gem.bin_path('bundler', 'bundle', FORCED_VERSION)
+          RUBY_WRAPPER
+          export FORCED_BUNDLER_VERSION="${BUNDLER_VERSION}"
+          chmod +x ./bin/bundle
+
+          echo "Wrapper bundle version (should be ${BUNDLER_VERSION}):"
+          ./bin/bundle -v
+
+          echo "Running bundle install (local then remote fallback)..."
+          ./bin/bundle install --local || ./bin/bundle install
+
+          if [ ! -f Gemfile.lock ]; then
+            echo "Gemfile.lock missing—creating with Bundler ${BUNDLER_VERSION}..."
+            ./bin/bundle install
+          fi
+          grep -A2 "BUNDLED WITH" Gemfile.lock || true
+
+          # ----- Fastlane environment -----
+          export FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=600
+          export FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6
+          
+          GetFileNamePath="$(downloadFirebasecredentials.secureFilePath)"
+          # Get file directory and name
+          GetFileDirectory=$(dirname "$GetFileNamePath")
+          GetFileName=$(basename "$GetFileNamePath")
+          # Print file directory and name
+          echo "$GetFileDirectory"
+          echo "$GetFileName"
+          export SECUREFILEPATH="$GetFileDirectory/$GetFileName"
+          
+          set +e
+          echo "Running Fastlane for variant: $(BuildVariant)"
+          ./bin/bundle exec fastlane "$(lane)" $(BuildVariant) 2>&1 | tee fastlane_output.log
+          FASTLANE_EXIT_CODE=$?
+          set -e
+ 
+          BUILD_OUTPUT=$(cat fastlane_output.log)
+          echo "$BUILD_OUTPUT"
+      continueOnError: false
+
+  - job: StoreValidationAndNotification
+    displayName: 'Store Validation and Notification'
+    pool:
+      name: SubwaycomOn-PremAgentPool
+    steps:
+      - checkout: none
+      - task: PowerShell@2
+        enabled: false
+        displayName: 'Store Status Validation'
+        name: storestatuscheck
+        inputs:
+          targetType: 'inline'
+          script: |
+            function Validate-StoreStatus {
+                $result = @{
+                    isOpen = $false
+                    isOnline = $false
+                    isDrawerAvailable = $false
+                    storeStatus = $false
+                }
+          
+                # Get environment and store information from system properties
+                $environment = "uat"
+                $store = "$(storeid)"
+                $accessToken = Get-AccessToken
+                # Construct the API request URL
+                $url = "https://$environment-api.test.subway.com/fresh-location/v1/locations/$store-0/status"
+          
+                # Setup HTTP client and headers
+                $headers = @{
+                    "Content-Type" = "application/json"
+                    "Authorization" = "Bearer $accessToken"
+                }
+          
+                # Retry logic (up to 3 times)
+                for ($iteration = 1; $iteration -le 3; $iteration++) {
+                    try {
+                        # Make the GET request
+                        $response = Invoke-RestMethod -Uri $url -Method Get -Headers $headers -ErrorAction Stop
+                        # Check if the response is successful (HTTP status code 200)
+                        if ($response -ne $null) {
+                            # Parse JSON response and check store status
+                            $result.isOpen = $response.isOpen
+                            $result.isOnline = $response.isOnline
+                            $result.isDrawerAvailable = $response.isDrawerAvailable
+          
+                            $result.storeStatus = $result.isOpen -and $result.isOnline -and $result.isDrawerAvailable
+                            break
+                        }
+                    }
+                    catch {
+                        Write-Host "Error occurred executing Store status API: $_"
+                        Write-Host "Retrying store status API..."
+                    }
+                    # Optional: Add delay between retries (e.g., 1 second)
+                    Start-Sleep -Seconds 1
+                }
+          
+                # Return the store status
+                return $result
+            }
+          
+            function Get-AccessToken {
+                $headers = @{
+                    "x-api-key" = "$(apikey)"
+                    "Content-Type" = "application/json"
+                }
+          
+                $body = @{
+                    eventData = @{
+                        environment = "cfa-uat"
+                        country = "US"
+                        Email = "auto-reg@qasubway.com"
+                        password = "$(storecheckpassword)"
+                    }
+                } | ConvertTo-Json -Depth 10
+          
+                $response = Invoke-RestMethod -Uri 'https://c73jog9b70.execute-api.us-east-1.amazonaws.com/prod/user/getaccesstoken' `
+                                            -Method Post `
+                                            -Headers $headers `
+                                            -Body $body
+                return $response.accessToken
+            }
+          
+            # Call validation and extract results
+            $statusResult = Validate-StoreStatus
+
+            $isOpen = $statusResult.isOpen
+            $isOnline = $statusResult.isOnline
+            $isDrawerAvailable = $statusResult.isDrawerAvailable
+            $storeStatus = $statusResult.storeStatus
+
+            # Write-Host "DEBUG: isOpen=$isOpen"
+            # Write-Host "DEBUG: isOnline=$isOnline"
+            # Write-Host "DEBUG: isDrawerAvailable=$isDrawerAvailable"
+            Write-Host "Store status: $storeStatus"
+
+            $EnableGoldSuite = if ($storeStatus) { "true" } else { "false" }
+              Write-Host "##vso[task.setvariable variable=EnableGoldSuite;isOutput=true]true"
+            Write-Host "##vso[task.setvariable variable=EnableGoldSuite;isOutput=true]$EnableGoldSuite"
+            
+            Write-Host "EnableGoldSuite value set to: $EnableGoldSuite"
+
+            Write-Host "##vso[task.setvariable variable=isOpen;isOutput=true]$isOpen"
+            Write-Host "##vso[task.setvariable variable=isOnline;isOutput=true]$isOnline"
+            Write-Host "##vso[task.setvariable variable=isDrawerAvailable;isOutput=true]$isDrawerAvailable"
+
+      - task: PowerShell@2
+        displayName: 'Send Store Offline Notification Email'
+        condition: eq(variables['storestatuscheck.EnableGoldSuite'], 'false')
+        inputs:
+          targetType: 'inline'
+          script: |
+            $smtpServer = "phl.smtp.subwaydai.com"
+            $smtpPort = 25
+            $fromAddress = "noreply@subway.com"
+
+            # Fetch the To and CC addresses from pipeline variables
+            $toAddress = $env:EmailTo -split ","
+            $ccAddress = $env:EmailCC -split ","
+
+            $organization = "subwaytechnology"
+            $project = "Guest-MobileApps"
+            $repoId = $env:BUILD_REPOSITORY_ID
+
+            $prNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTID
+            if ([string]::IsNullOrWhiteSpace($prNumber)) {
+              $prNumber = "N/A"
+              $prLink = "#"
+            } else {
+              $prLink ="https://dev.azure.com/$organization/$project/_git/$repoId/pullrequest/$prNumber"
+            }
+
+            $storeId = "$(storeid)"
+            if ([string]::IsNullOrWhiteSpace($storeId)) {
+              $storeId = "Unknown"
+            }
+
+            $isOpen = "$(storestatuscheck.isOpen)"
+            $isOnline = "$(storestatuscheck.isOnline)"
+            $isDrawerAvailable = "$(storestatuscheck.isDrawerAvailable)"
+            $buildId = "$(Build.BuildId)"
+            $buildUri = "$(Build.BuildUri)"
+            $buildLink = "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$buildId"
+
+            # Convert boolean values to user-friendly strings
+            $storeStatus = if ($isOpen -eq "True") { "Open" } else { "Closed" }
+            $onlineStatus = if ($isOnline -eq "True") { "Online" } else { "Offline" }
+            $drawerStatus = if ($isDrawerAvailable -eq "True") { "Available" } else { "Unavailable" }
+
+            $emailBody = @"
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  color: #333;
+                }
+                h2 {
+                  color: #D80000;
+                }
+                table {
+                  border-collapse: collapse;
+                  width: 600px;
+                  margin-top: 10px;
+                }
+                th {
+                  background-color: #003366;
+                  color: white;
+                  font-size: 16px;
+                  text-align: left;
+                  padding: 8px;
+                }
+                td {
+                  border: 1px solid #ddd;
+                  padding: 6px 10px;
+                  vertical-align: top;
+                }
+                .label-cell {
+                  font-weight: bold;
+                  background-color: #f2f2f2;
+                  width: 200px;
+                }
+                a {
+                  color: #007BFF;
+                  text-decoration: none;
+                }
+              </style>
+            </head>
+            <body>
+              <h2>⚠️ URGENT: Store $storeId is Offline!</h2>
+              <p>The status of store <strong>$storeId</strong> indicates it is <strong>offline</strong>.</p>
+              <p>Gold Suite execution skipped due to store offline. Please check the store's status and take necessary actions to resolve the issue.</p>
+
+              <table>
+                <tr>
+                  <th colspan="2">🧪 Pre-Requisites Check Summary</th>
+                </tr>
+                <tr>
+                  <td class="label-cell">Is Store Open</td>
+                  <td>$storeStatus</td>
+                </tr>
+                <tr>
+                  <td class="label-cell">Is Store Online</td>
+                  <td>$onlineStatus</td>
+                </tr>
+                <tr>
+                  <td class="label-cell">Is Drawer Available</td>
+                  <td>$drawerStatus</td>
+                </tr>
+                <tr>
+                  <td class="label-cell">Build ID</td>
+                  <td><a href="$buildLink" target="_blank">$buildId</a></td>
+                </tr>
+                <tr>
+                  <td class="label-cell">PR Number</td>
+                  <td><a href="$prLink" target="_blank">$prNumber</a></td>
+                </tr>
+              </table>
+              <br/>
+              <p>Thank you,<br/><strong>Subway DevOps Team</strong></p>
+            </body>
+            </html>
+            "@
+
+            $mail = New-Object System.Net.Mail.MailMessage
+            $mail.From = $fromAddress
+            # Add multiple To recipients
+            $toAddress.Split(",") | ForEach-Object { $mail.To.Add($_.Trim()) }
+
+            # Add multiple CC recipients (optional)
+            if ($ccAddress) {
+                $ccAddress.Split(",") | ForEach-Object { $mail.CC.Add($_.Trim()) }
+            }
+
+            $mail.Subject = "⚠️ [URGENT] - [Action Required] - iOS Gated Pipeline Alert | Store #$storeId is Offline"
+            $mail.IsBodyHtml = $true
+            $mail.Body = $emailBody
+            $mail.Priority = [System.Net.Mail.MailPriority]::High
+            $mail.SubjectEncoding = [System.Text.Encoding]::UTF8
+
+            $smtp = New-Object System.Net.Mail.SmtpClient($smtpServer, $smtpPort)
+            $smtp.Send($mail)
+
+      - task: PowerShell@2
+        displayName: 'Get PR Details'
+        name: GetPR
+        inputs:
+          targetType: 'inline'
+          script: |
+            $ErrorActionPreference = "Stop"
+            $Error.Clear()
+
+            Try {
+
+              $Token = $env:SYSTEM_ACCESSTOKEN
+              $headers = @{ Authorization = "Bearer $Token" }
+
+                function Write-PRDetails {
+                  param (
+                      [string]$prId,
+                      [object]$prDetails
+                  )
+                  Write-Host "----------------------------------------"
+                  Write-Host "Pull Request Details:"
+                  Write-Host "----------------------------------------"
+                  Write-Host "PR Number: $prId"
+                  Write-Host "PR Creator: $($prDetails.createdBy.displayName)"
+                  Write-Host "Source Branch: $($prDetails.sourceRefName)"
+                  Write-Host "Target Branch: $($prDetails.targetRefName)"
+                  Write-Host "PR Title: $($prDetails.title)"
+                  Write-Host "----------------------------------------"
+
+                  # Set pipeline variables with isOutput flag
+                  Write-Host "##vso[task.setvariable variable=PRNumber;isOutput=true]$prId"
+                  Write-Host "##vso[task.setvariable variable=PRCreator;isOutput=true]$($prDetails.createdBy.displayName)"
+                  Write-Host "##vso[task.setvariable variable=SourceBranch;isOutput=true]$($prDetails.sourceRefName)"
+                  Write-Host "##vso[task.setvariable variable=TargetBranch;isOutput=true]$($prDetails.targetRefName)"
+                  Write-Host "##vso[task.setvariable variable=PRTitle;isOutput=true]$($prDetails.title)"
+              }
+
+              if ($env:BUILD_SOURCEBRANCH.StartsWith("refs/pull/")) {
+                  $prId = $env:BUILD_SOURCEBRANCH -replace "refs/pull/(\d+)/merge", '$1'
+                  $prUri = "https://dev.azure.com/subwaytechnology/Guest-MobileApps/_apis/git/pullrequests/$($prId)?api-version=6.0"
+                  $prDetails = Invoke-RestMethod -Uri $prUri -Headers $headers -Method Get
+                  Write-PRDetails -prId $prId -prDetails $prDetails
+                  $prDetails | ConvertTo-Json -Depth 10 | Out-File "pr_details.json"
+                  Write-Host "PR details exported to pr_details.json"
+              }
+              else {
+                  Write-Host "This is not a PR build. Current branch: $env:BUILD_SOURCEBRANCH"
+                  # Set empty values for pipeline variables in non-PR builds
+                  Write-Host "##vso[task.setvariable variable=PRNumber;isOutput=true]"
+                  Write-Host "##vso[task.setvariable variable=PRCreator;isOutput=true]"
+                  Write-Host "##vso[task.setvariable variable=SourceBranch;isOutput=true]$env:BUILD_SOURCEBRANCH"
+                  Write-Host "##vso[task.setvariable variable=TargetBranch;isOutput=true]"
+                  Write-Host "##vso[task.setvariable variable=PRTitle;isOutput=true]"
+              }
+            }
+            catch {
+              Write-Error "An error occurred while fetching PR details:"
+              Write-Error ($_.Exception | Format-List -Force | Out-String) -ErrorAction Continue
+              Write-Error ($_.InvocationInfo | Format-List -Force | Out-String) -ErrorAction Continue
+              exit 1
+            }
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- stage: GoldenSuite
+  dependsOn: Subway_IOS_NA_GatedBuild
+  condition: and(succeeded('Subway_IOS_NA_GatedBuild'),eq(variables['GOLD_SUITE'], 'true'),eq(dependencies.Subway_IOS_NA_GatedBuild.outputs['StoreValidationAndNotification.storestatuscheck.EnableGoldSuite'], 'true'))
+  variables:
+      appvar: $[stageDependencies.Subway_IOS_NA_GatedBuild.UAT_BuildAndRelease_GatedBuild.outputs['buildnumber.UPDATED_BUILD_NUMBER']]
+      PRNumber: $[stageDependencies.Subway_IOS_NA_GatedBuild.StoreValidationAndNotification.outputs['GetPR.PRNumber']]
+      PRCreator: $[stageDependencies.Subway_IOS_NA_GatedBuild.StoreValidationAndNotification.outputs['GetPR.PRCreator']]
+      PRSourceBranch: $[stageDependencies.Subway_IOS_NA_GatedBuild.StoreValidationAndNotification.outputs['GetPR.SourceBranch']]
+      PRTargetBranch: $[stageDependencies.Subway_IOS_NA_GatedBuild.StoreValidationAndNotification.outputs['GetPR.TargetBranch']]
+      PRTitle: $[stageDependencies.Subway_IOS_NA_GatedBuild.StoreValidationAndNotification.outputs['GetPR.PRTitle']]
+  jobs:
+  - template: azure-pipelines-CD.yml@goldsuite
+    parameters:
+      Browser: ios
+      AppVersionNumber: $(appvar)
+      MWEnvironment: cfa-uat
+      Environment: swuat
+      Scope: GoldSuite
+      Area: DigitalApp
+      Culture: en-US
+      Store: "$(storeid)"
+      GroupBased: All
+
+- stage: Sonarqube
+  dependsOn: []
+  condition: eq(variables['RUN_SONARQUBE'], 'true')
+  jobs:
+  - job: Sonarqube_Result
+    timeoutInMinutes: 0
+    cancelTimeoutInMinutes: 2
+    steps:
+      - template: ../SonarQube/ios-sonarqube-templateone.yml
