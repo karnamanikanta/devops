@@ -1,0 +1,15 @@
+{
+  "github.copilot.enable": {
+    "*": true,
+    "swift": true,
+    "xml": true,
+    "plist": true,
+    "plaintext": false
+  },
+  "editor.inlineSuggest.enabled": true,
+  "files.associations": {
+    "*.xib": "xml",
+    "*.storyboard": "xml",
+    "*.plist": "plist"
+  }
+}
